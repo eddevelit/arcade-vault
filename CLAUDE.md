@@ -16,16 +16,10 @@ Arcade Vault — a platform for playing games online and competing for the highe
 - The `lint` script invokes the ESLint CLI directly (`"lint": "eslint"`), not `next lint`.
 - Turbopack is the default bundler for both `next dev` and `next build` (pass `--webpack` to opt out).
 
-## Commands
-
-```bash
-npm run dev     # start dev server (Turbopack) at http://localhost:3000
-npm run build   # production build (Turbopack; does NOT run lint)
-npm run start   # serve the production build
-npm run lint    # run ESLint (flat config in eslint.config.mjs)
-```
-
 There is no test runner configured in `package.json` yet.
+
+## Skills
+Usa siempre /front-end Design para diseñar la interfaz de usuario. 
 
 ## Architecture notes
 
