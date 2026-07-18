@@ -208,6 +208,12 @@ function FeatureIcon({ kind }: { kind: string }) {
   return null;
 }
 
+const STATS = [
+  { n: `${GAMES.length}`, u: "JUEGOS", s: "Y CONTANDO" },
+  { n: "MILES", u: "DE PARTIDAS", s: "JUGADAS CADA DÍA" },
+  { n: "GLOBAL", u: "RANKING", s: "COMPITE CON EL MUNDO" },
+] as const;
+
 function MiniCard({ game, onClick }: { game: Game; onClick: () => void }) {
   return (
     <div className="mini-card" onClick={onClick}>
@@ -295,6 +301,18 @@ export default function HomePage() {
           <button className="btn lg" onClick={() => router.push("/biblioteca")}>
             VER TODOS LOS JUEGOS →
           </button>
+        </div>
+      </section>
+
+      <section className="home-stats reveal">
+        <div className="stats-inner">
+          {STATS.map((st, i) => (
+            <div key={i} className="stat-block" style={{ transitionDelay: i * 90 + "ms" }}>
+              <div className="stat-n neon-yellow">{st.n}</div>
+              <div className="stat-u pixel">{st.u}</div>
+              <div className="stat-s">{st.s}</div>
+            </div>
+          ))}
         </div>
       </section>
     </div>
