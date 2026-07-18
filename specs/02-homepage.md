@@ -1,6 +1,6 @@
 # Spec 02 — Homepage
 
-- **Estado:** Aprobado
+- **Estado:** Implementado
 - **Dependencias:** Spec 01 — MVP Visual Screens (reutiliza `Nav`, `lib/data.ts`, `GameCard`, `layout.tsx`, y mueve la ruta de biblioteca que ese spec creó en `/`)
 - **Fecha:** 2026-07-17
 - **Objetivo:** Implementar la landing page (Home) de Arcade Vault en `/` migrando `home.jsx` del template de referencia, moviendo la biblioteca actual de `/` a `/biblioteca` y actualizando el nav para reflejar ambas rutas.
