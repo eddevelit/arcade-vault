@@ -11,7 +11,8 @@ export default function Nav() {
   const user = useStoredUser();
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/" || pathname.startsWith("/juego/");
+    if (href === "/biblioteca")
+      return pathname === "/biblioteca" || pathname.startsWith("/juego/");
     return pathname === href;
   };
 
@@ -32,6 +33,9 @@ export default function Nav() {
         </Link>
         <div className="links">
           <Link href="/" className={isActive("/") ? "active" : ""}>
+            Inicio
+          </Link>
+          <Link href="/biblioteca" className={isActive("/biblioteca") ? "active" : ""}>
             Biblioteca
           </Link>
           <Link
@@ -73,6 +77,13 @@ export default function Nav() {
           MENÚ
         </div>
         <Link href="/" className={isActive("/") ? "active" : ""} onClick={close}>
+          Inicio
+        </Link>
+        <Link
+          href="/biblioteca"
+          className={isActive("/biblioteca") ? "active" : ""}
+          onClick={close}
+        >
           Biblioteca
         </Link>
         <Link
