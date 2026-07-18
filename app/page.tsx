@@ -463,6 +463,17 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <section className="home-final reveal">
+        <h2 className="final-title pixel">¿LISTO PARA JUGAR?</h2>
+        <button
+          className="btn xl pulse final-cta"
+          onClick={() => router.push("/biblioteca")}
+        >
+          INSERTAR MONEDA →
+        </button>
+        <div className="final-tag">Gratis. Sin registro obligatorio. Empieza en segundos.</div>
+      </section>
     </div>
   );
 }
