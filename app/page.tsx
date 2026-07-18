@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { GAMES, type Game } from "@/lib/data";
 
 function useReveal() {
   useEffect(() => {
@@ -207,6 +208,20 @@ function FeatureIcon({ kind }: { kind: string }) {
   return null;
 }
 
+function MiniCard({ game, onClick }: { game: Game; onClick: () => void }) {
+  return (
+    <div className="mini-card" onClick={onClick}>
+      <div className="mini-cover">
+        <div className={"cover-bg " + game.cover}></div>
+      </div>
+      <div className="mini-meta">
+        <div className="mini-title">{game.title}</div>
+        <div className="mini-cat">{game.cat}</div>
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const router = useRouter();
   useReveal();
@@ -262,6 +277,24 @@ export default function HomePage() {
               <div className="ft-desc">{f.d}</div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="home-section reveal">
+        <div className="section-head">
+          <div className="kicker pixel neon-cyan">{"// 02"}</div>
+          <h2 className="section-title">JUEGOS DISPONIBLES AHORA</h2>
+          <div className="section-rule"></div>
+        </div>
+        <div className="mini-rail">
+          {GAMES.slice(0, 6).map((g) => (
+            <MiniCard key={g.id} game={g} onClick={() => router.push(`/juego/${g.id}`)} />
+          ))}
+        </div>
+        <div style={{ textAlign: "center", marginTop: 24 }}>
+          <button className="btn lg" onClick={() => router.push("/biblioteca")}>
+            VER TODOS LOS JUEGOS →
+          </button>
         </div>
       </section>
     </div>
