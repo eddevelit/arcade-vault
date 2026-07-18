@@ -1,6 +1,6 @@
 # Spec 01 — MVP Visual Screens
 
-- **Estado:** Aprobado
+- **Estado:** Implementado
 - **Dependencias:** Ninguna (primer spec del proyecto)
 - **Fecha:** 2026-07-16
 - **Objetivo:** Implementar, solo a nivel visual, las 5 pantallas de Arcade Vault (biblioteca, detalle de juego, reproductor simulado, salón de la fama y autenticación) migrando los templates de referencia a componentes de Next.js App Router con TypeScript.
