@@ -14,12 +14,22 @@ export interface StoredScoreEntry {
   at: number;
 }
 
+let cachedUserRaw: string | null | undefined;
+let cachedUser: StoredUser | null = null;
+
+// useSyncExternalStore requiere que getSnapshot devuelva la misma referencia
+// si el valor subyacente no cambió; JSON.parse siempre crea un objeto nuevo,
+// lo que causaba un loop infinito de renders al iniciar sesión.
 export function getUser(): StoredUser | null {
+  const raw = localStorage.getItem(USER_KEY);
+  if (raw === cachedUserRaw) return cachedUser;
+  cachedUserRaw = raw;
   try {
-    return JSON.parse(localStorage.getItem(USER_KEY) || "null");
+    cachedUser = raw ? (JSON.parse(raw) as StoredUser) : null;
   } catch {
-    return null;
+    cachedUser = null;
   }
+  return cachedUser;
 }
 
 const userListeners = new Set<() => void>();
