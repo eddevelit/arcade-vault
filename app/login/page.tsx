@@ -14,12 +14,12 @@ export default function LoginPage() {
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     saveUser({ name: (user || "PLAYER1").toUpperCase().slice(0, 10) });
-    router.push("/");
+    router.push("/biblioteca");
   };
 
   const continueAsGuest = () => {
     clearUser();
-    router.push("/");
+    router.push("/biblioteca");
   };
 
   return (
