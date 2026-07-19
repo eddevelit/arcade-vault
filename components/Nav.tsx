@@ -44,6 +44,9 @@ export default function Nav() {
           >
             Salón de la Fama
           </Link>
+          <Link href="/acerca-de" className={isActive("/acerca-de") ? "active" : ""}>
+            Acerca de
+          </Link>
         </div>
         <div className="spacer"></div>
         <div className="coin-counter">
@@ -92,6 +95,13 @@ export default function Nav() {
           onClick={close}
         >
           Salón de la Fama
+        </Link>
+        <Link
+          href="/acerca-de"
+          className={isActive("/acerca-de") ? "active" : ""}
+          onClick={close}
+        >
+          Acerca de
         </Link>
         {user ? (
           <a onClick={handleSignOut}>Cuenta</a>
