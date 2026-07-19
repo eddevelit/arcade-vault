@@ -1,6 +1,6 @@
 # Spec 03 — Acerca de y Contacto
 
-- **Estado:** Aprobado
+- **Estado:** Implementado
 - **Dependencias:** Spec 02 — Homepage (agrega el link "Acerca de" al Nav que ese spec dejó pendiente a propósito)
 - **Fecha:** 2026-07-18
 - **Objetivo:** Implementar la página "Acerca de" (`/acerca-de`) migrando `about.jsx` del template de referencia, conectando su formulario de contacto a un envío real de correo electrónico mediante Resend, y agregando el link "Acerca de" al Nav.
@@ -13,7 +13,7 @@
 - Migración de las clases CSS `.about-*`, `.contact-*`, `.highlight-*`, `.terminal-*`, `.field`, etc. desde `references/resources/home-about/styles.css` a `app/globals.css`.
 - Formulario de contacto conectado a un endpoint real (`app/api/contacto/route.ts`) que envía el correo con el SDK de Resend, en vez de la simulación estática del template.
 - Instalación de la dependencia `resend` (`npm install resend`).
-- Variable de entorno `RESEND_API_KEY` en `.env.local` (no versionado; ya cubierto por `.env*` en `.gitignore`), documentada con un `.env.local.example` committeado como referencia.
+- Variable de entorno `RESEND_API_KEY` en `.env.local` (no versionado; ya cubierto por `.env*` en `.gitignore`), documentada con un `.env.template` committeado como referencia.
 - Remitente del correo usando el sandbox de Resend (`onboarding@resend.dev`); destinatario fijo `edd.develit@gmail.com`; `Reply-To` con el email que ingresó la persona en el formulario.
 - Validación de campos (nombre, email, mensaje no vacíos; email con formato válido) tanto en el cliente (ya existente) como en el servidor (nueva, en la API route).
 - Nuevo estado de error en el formulario (no existe en el template original): si el envío falla, se muestra dentro del mismo panel "terminal" una línea de error, conservando los datos ya escritos, sin perder el estado del formulario.
@@ -65,7 +65,7 @@ type ContactResponse =
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxx
 ```
 
-Se documenta con un `.env.local.example` (sí versionado) que contiene únicamente `RESEND_API_KEY=` como referencia para quien clone el repo. El valor real lo completa el usuario con su propia clave de resend.com; no se genera ni se hardcodea ninguna clave en este spec.
+Se documenta con un `.env.template` (sí versionado) que contiene únicamente `RESEND_API_KEY=` como referencia para quien clone el repo. El valor real lo completa el usuario con su propia clave de resend.com; no se genera ni se hardcodea ninguna clave en este spec.
 
 ### Constantes fijas (no configurables por env, por ser del alcance acordado)
 
@@ -76,7 +76,7 @@ const CONTACT_FROM = "Arcade Vault <onboarding@resend.dev>";
 
 ## Plan de implementación
 
-1. **Instalar dependencia y preparar entorno** — `npm install resend`; crear `.env.local.example` (versionado) con `RESEND_API_KEY=` como placeholder; agregar `RESEND_API_KEY` real a `.env.local` local (no versionado, la completa el usuario con su clave de resend.com).
+1. **Instalar dependencia y preparar entorno** — `npm install resend`; crear `.env.template` (versionado) con `RESEND_API_KEY=` como placeholder; agregar `RESEND_API_KEY` real a `.env.local` local (no versionado, la completa el usuario con su clave de resend.com).
 
 2. **Migrar CSS de about/contacto** — Portar a `app/globals.css` las clases usadas por `about.jsx` que hoy no existen (`.about-*`, `.contact-*`, `.highlight-*`, `.terminal-*`, `.field`, `.div-bar`, `.div-pixels`), copiándolas tal cual desde `references/resources/home-about/styles.css`.
 
@@ -96,20 +96,20 @@ const CONTACT_FROM = "Arcade Vault <onboarding@resend.dev>";
 
 ## Criterios de aceptación
 
-- [ ] `npm run build` completa sin errores.
-- [ ] `npm run lint` no reporta errores.
-- [ ] `/acerca-de` muestra el hero "ACERCA DE ARCADE VAULT" con kicker, título, texto de misión y los 3 highlights (con ícono, texto y color correspondiente).
-- [ ] El banner divisor animado aparece entre el hero y la sección de contacto.
-- [ ] Al hacer scroll, las secciones con clase `.reveal` aparecen con su animación (no están visibles de golpe al cargar la página).
-- [ ] La sección de contacto muestra la intro, los 3 tips y el formulario (nombre, email, mensaje).
-- [ ] Enviar el formulario con algún campo vacío dispara la animación de "shake" y **no** realiza ninguna llamada a `/api/contacto`.
-- [ ] Enviar el formulario con datos válidos muestra la secuencia de líneas de terminal ("Conectando…", "Validando…", "Transmitiendo…") mientras se espera la respuesta real de la API.
-- [ ] Al completarse el envío con éxito, llega un correo real a `edd.develit@gmail.com` con: nombre, email y mensaje del formulario, y `Reply-To` igual al email ingresado.
-- [ ] Tras el éxito, se muestra la línea final "MENSAJE RECIBIDO…" con el nombre en mayúsculas, y el botón "ENVIAR OTRO MENSAJE" reinicia el formulario a su estado vacío.
-- [ ] Si la API falla (ej. `RESEND_API_KEY` inválida o ausente), se muestra una línea de error dentro del mismo panel terminal, sin borrar los valores ya escritos en nombre/email/mensaje.
-- [ ] Llamar a `POST /api/contacto` directamente con un body vacío o con un email mal formado responde `{ ok: false, error }` con status 400, sin enviar ningún correo.
-- [ ] El Nav (desktop y menú móvil) muestra el link "Acerca de" apuntando a `/acerca-de`, y se marca como activo únicamente en esa ruta.
-- [ ] `RESEND_API_KEY` no aparece hardcodeada en ningún archivo versionado; `.env.local` no está trackeado por git (ya cubierto por `.env*` en `.gitignore`); existe `.env.local.example` versionado con `RESEND_API_KEY=` como placeholder.
+- [x] `npm run build` completa sin errores.
+- [x] `npm run lint` no reporta errores (en el código de este spec; `references/**` tiene errores preexistentes desde antes de este spec, fuera de su alcance).
+- [x] `/acerca-de` muestra el hero "ACERCA DE ARCADE VAULT" con kicker, título, texto de misión y los 3 highlights (con ícono, texto y color correspondiente).
+- [x] El banner divisor animado aparece entre el hero y la sección de contacto.
+- [x] Al hacer scroll, las secciones con clase `.reveal` aparecen con su animación (no están visibles de golpe al cargar la página).
+- [x] La sección de contacto muestra la intro, los 3 tips y el formulario (nombre, email, mensaje).
+- [x] Enviar el formulario con algún campo vacío dispara la animación de "shake" y **no** realiza ninguna llamada a `/api/contacto`.
+- [x] Enviar el formulario con datos válidos muestra la secuencia de líneas de terminal ("Conectando…", "Validando…", "Transmitiendo…") mientras se espera la respuesta real de la API.
+- [x] Al completarse el envío con éxito, llega un correo real a `edd.develit@gmail.com` con: nombre, email y mensaje del formulario, y `Reply-To` igual al email ingresado.
+- [x] Tras el éxito, se muestra la línea final "MENSAJE RECIBIDO…" con el nombre en mayúsculas, y el botón "ENVIAR OTRO MENSAJE" reinicia el formulario a su estado vacío.
+- [x] Si la API falla (ej. `RESEND_API_KEY` inválida o ausente), se muestra una línea de error dentro del mismo panel terminal, sin borrar los valores ya escritos en nombre/email/mensaje.
+- [x] Llamar a `POST /api/contacto` directamente con un body vacío o con un email mal formado responde `{ ok: false, error }` con status 400, sin enviar ningún correo.
+- [x] El Nav (desktop y menú móvil) muestra el link "Acerca de" apuntando a `/acerca-de`, y se marca como activo únicamente en esa ruta.
+- [x] `RESEND_API_KEY` no aparece hardcodeada en ningún archivo versionado; `.env.local` no está trackeado por git (ya cubierto por `.env*` en `.gitignore`); existe `.env.template` versionado con `RESEND_API_KEY=` como placeholder.
 
 ## Decisiones tomadas y descartadas
 
@@ -125,7 +125,7 @@ const CONTACT_FROM = "Arcade Vault <onboarding@resend.dev>";
 
 - **Validación duplicada en cliente y servidor (tomada).** El endpoint `POST /api/contacto` es público y alcanzable sin pasar por el formulario; validar solo en el cliente lo dejaría abierto a envíos vacíos o malformados. *Descartada:* confiar únicamente en la validación del cliente, por ser más simple pero insegura para un endpoint expuesto.
 
-- **`.env.local.example` versionado como documentación (tomada).** Deja explícito el nombre de la variable de entorno requerida (`RESEND_API_KEY`) para quien clone el repo, sin exponer ningún valor real. *Descartada:* no documentarlo, porque el nombre de la variable no es derivable del código sin leer la API route.
+- **`.env.template` versionado como documentación (tomada).** Deja explícito el nombre de la variable de entorno requerida (`RESEND_API_KEY`) para quien clone el repo, sin exponer ningún valor real. *Descartada:* no documentarlo, porque el nombre de la variable no es derivable del código sin leer la API route.
 
 - **Sin persistencia de mensajes, rate limiting ni protección anti-spam (tomada).** Mantiene el alcance acotado a "que el formulario envíe un correo real", igual que el criterio de scope mínimo de los specs 01 y 02. *Descartada:* agregar honeypot/captcha o guardar los mensajes en algún lado, por ser esfuerzo adicional no solicitado que ameritaría su propia definición de producto (¿dónde se guardan?, ¿quién los ve?).
 
