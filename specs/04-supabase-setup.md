@@ -100,15 +100,15 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 
 ## Criterios de aceptación
 
-- [ ] `npm install @supabase/supabase-js @supabase/ssr` agrega ambas dependencias a `package.json` y `package-lock.json`.
-- [ ] `.env.template` contiene las 3 variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_DB_PASSWORD`) como placeholders vacíos, sin ningún valor real.
-- [ ] `.env.local` contiene los valores reales de `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` del proyecto Supabase existente, y no está trackeado por git. `SUPABASE_DB_PASSWORD` puede quedar vacía.
-- [ ] `lib/supabase/client.ts` exporta una función `createClient()` que instancia un cliente browser válido (`createBrowserClient`).
-- [ ] `lib/supabase/server.ts` exporta una función `createClient()` (async) que instancia un cliente server válido (`createServerClient`), usando `cookies()` de `next/headers`.
-- [ ] Llamar a la herramienta MCP de Supabase (`list_tables`) contra el proyecto configurado en `.env.local` responde exitosamente (sin error de credenciales), confirmando que apunta a un proyecto real y accesible.
-- [ ] `npm run build` completa sin errores.
-- [ ] `npm run lint` no reporta errores.
-- [ ] Ninguna pantalla existente (`/`, `/biblioteca`, `/login`, `/acerca-de`, `/salon-de-la-fama`, `/juego/[id]`) cambia de comportamiento — nada importa todavía los nuevos clientes de Supabase.
+- [x] `npm install @supabase/supabase-js @supabase/ssr` agrega ambas dependencias a `package.json` y `package-lock.json`.
+- [x] `.env.template` contiene las 3 variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_DB_PASSWORD`) como placeholders vacíos, sin ningún valor real.
+- [x] `.env.local` contiene los valores reales de `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` del proyecto Supabase existente, y no está trackeado por git. `SUPABASE_DB_PASSWORD` puede quedar vacía.
+- [x] `lib/supabase/client.ts` exporta una función `createClient()` que instancia un cliente browser válido (`createBrowserClient`).
+- [x] `lib/supabase/server.ts` exporta una función `createClient()` (async) que instancia un cliente server válido (`createServerClient`), usando `cookies()` de `next/headers`.
+- [x] Llamar a la herramienta MCP de Supabase (`list_tables`) contra el proyecto configurado en `.env.local` responde exitosamente (sin error de credenciales), confirmando que apunta a un proyecto real y accesible.
+- [x] `npm run build` completa sin errores.
+- [x] `npm run lint` no reporta errores.
+- [x] Ninguna pantalla existente (`/`, `/biblioteca`, `/login`, `/acerca-de`, `/salon-de-la-fama`, `/juego/[id]`) cambia de comportamiento — nada importa todavía los nuevos clientes de Supabase.
 
 ## Decisiones tomadas y descartadas
 
