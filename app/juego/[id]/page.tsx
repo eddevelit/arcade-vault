@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { seededScores } from "@/lib/data";
 import { getGame } from "@/lib/games";
+import { getTopScores } from "@/lib/scores";
 
 export default async function GameDetailPage({
   params,
@@ -12,7 +12,7 @@ export default async function GameDetailPage({
   const game = await getGame(id);
   if (!game) notFound();
 
-  const scores = seededScores(id.length * 17 + 3, 10);
+  const scores = await getTopScores(id, 10);
 
   return (
     <div className="av-detail fade-in">
@@ -73,6 +73,18 @@ export default async function GameDetailPage({
       <aside>
         <div className="leaderboard">
           <h3>MEJORES PUNTUACIONES</h3>
+          {scores.length === 0 && (
+            <div
+              className="mono"
+              style={{
+                color: "var(--ink-dim)",
+                letterSpacing: "0.08em",
+                padding: "16px 0",
+              }}
+            >
+              SIN PUNTUACIONES TODAVÍA. ¡SÉ EL PRIMERO!
+            </div>
+          )}
           {scores.map((r, i) => (
             <div
               key={r.name}
