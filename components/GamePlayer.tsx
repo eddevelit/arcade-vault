@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Game } from "@/lib/data";
-import { saveScore, useStoredUser } from "@/lib/session";
+import { useStoredUser } from "@/lib/session";
+import { saveScore } from "@/lib/scores";
 
 interface GamePlayerProps {
   game: Game;
@@ -17,6 +18,8 @@ export default function GamePlayer({ game }: GamePlayerProps) {
   const [over, setOver] = useState(false);
   const [nameOverride, setNameOverride] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const level = Math.floor(score / 2500) + 1;
   const name = nameOverride ?? (user ? user.name : "INVITADO");
@@ -25,7 +28,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
     if (over || paused) return;
     const t = setInterval(
       () => setScore((s) => s + Math.floor(10 + Math.random() * 90)),
-      220
+      220,
     );
     return () => clearInterval(t);
   }, [over, paused]);
@@ -36,6 +39,21 @@ export default function GamePlayer({ game }: GamePlayerProps) {
     setPaused(false);
     setOver(false);
     setSaved(false);
+    setSaving(false);
+    setSaveError(false);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveError(false);
+    try {
+      await saveScore({ game: game.id, score, name });
+      setSaved(true);
+    } catch {
+      setSaveError(true);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -84,7 +102,10 @@ export default function GamePlayer({ game }: GamePlayerProps) {
             <div className="player-ship"></div>
           </div>
           {paused && (
-            <div className="crt-content" style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}>
+            <div
+              className="crt-content"
+              style={{ background: "rgba(0,0,0,0.6)", zIndex: 5 }}
+            >
               <div>
                 <div className="pixel neon-yellow" style={{ fontSize: 22 }}>
                   EN PAUSA
@@ -106,9 +127,7 @@ export default function GamePlayer({ game }: GamePlayerProps) {
         </div>
         <div className="crt-bottom">
           <span className="led">SEÑAL OK</span>
-          <span>
-            {game.title} · CRT-83 · 60 HZ
-          </span>
+          <span>{game.title} · CRT-83 · 60 HZ</span>
           <span>CARGA · 1MB</span>
         </div>
       </div>
@@ -123,21 +142,31 @@ export default function GamePlayer({ game }: GamePlayerProps) {
               <div className="input-row">
                 <input
                   value={name}
-                  onChange={(e) => setNameOverride(e.target.value.toUpperCase().slice(0, 10))}
+                  onChange={(e) =>
+                    setNameOverride(e.target.value.toUpperCase().slice(0, 10))
+                  }
                   placeholder="TUS INICIALES"
                 />
                 <button
                   className="btn yellow"
-                  onClick={() => {
-                    saveScore({ game: game.id, score, name });
-                    setSaved(true);
-                  }}
+                  onClick={handleSave}
+                  disabled={saving}
                 >
-                  GUARDAR PUNTUACIÓN
+                  {saving ? "GUARDANDO..." : "GUARDAR PUNTUACIÓN"}
                 </button>
               </div>
             ) : (
               <div className="toast-saved">▸ PUNTUACIÓN GUARDADA_</div>
+            )}
+            {saveError && (
+              <div className="input-row">
+                <span className="mono" style={{ color: "var(--ink-dim)" }}>
+                  ERROR AL GUARDAR LA PUNTUACIÓN.
+                </span>
+                <button className="btn magenta" onClick={handleSave}>
+                  REINTENTAR
+                </button>
+              </div>
             )}
             <div className="actions">
               <button className="btn" onClick={restart}>
