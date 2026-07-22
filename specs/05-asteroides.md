@@ -37,8 +37,8 @@
 {
   id: "asteroides",
   title: "ASTEROIDES",
-  short: "Dispará, esquivá y sobreviví entre rocas que se multiplican.",
-  long: "Pilotás una nave triangular a la deriva en un campo de asteroides sin bordes: todo lo que sale por un lado reaparece del otro. Rotá, propulsate y disparate para partir rocas grandes en fragmentos cada vez más pequeños, sumando puntos por cada uno. Recolectá el power-up 3x para disparo triple temporal, y aprovechá los segundos de invencibilidad al reaparecer tras perder una vida.",
+  short: "Dispara, esquiva y sobrevive entre rocas que se multiplican.",
+  long: "Tu nave triangular flota en un campo de asteroides sin bordes: todo lo que sale por un lado reaparece del otro. Rota, propulsa y dispara para partir rocas grandes en fragmentos cada vez más pequeños, sumando puntos por cada uno. Recolecta el power-up 3x para disparo triple temporal, y aprovecha los segundos de invencibilidad al reaparecer tras perder una vida.",
   cat: "SHOOTER",
   cover: "cover-asteroides",
   color: "cyan",
