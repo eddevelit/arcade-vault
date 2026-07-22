@@ -101,17 +101,6 @@ export const GAMES: Game[] = [
     best: 24,
     plays: "4.2K",
   },
-  {
-    id: "asteroides",
-    title: "ASTEROIDES",
-    short: "Dispara, esquiva y sobrevive entre rocas que se multiplican.",
-    long: "Tu nave triangular flota en un campo de asteroides sin bordes: todo lo que sale por un lado reaparece del otro. Rota, propulsa y dispara para partir rocas grandes en fragmentos cada vez más pequeños, sumando puntos por cada uno. Recolecta el power-up 3x para disparo triple temporal, y aprovecha los segundos de invencibilidad al reaparecer tras perder una vida.",
-    cat: "SHOOTER",
-    cover: "cover-asteroides",
-    color: "cyan",
-    best: 63500,
-    plays: "9.8K",
-  },
 ];
 
 export const CATS: Array<"TODOS" | GameCategory> = [
