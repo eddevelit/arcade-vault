@@ -528,16 +528,6 @@ export function createAsteroidsGame(
     }
   }
 
-  function drawOverlay(title: string, sub: string) {
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 46px monospace";
-    ctx.fillText(title, W / 2, H / 2 - 18);
-    ctx.font = "18px monospace";
-    ctx.fillStyle = "rgba(255,255,255,0.65)";
-    ctx.fillText(sub, W / 2, H / 2 + 22);
-  }
-
   function draw() {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, W, H);
@@ -549,8 +539,6 @@ export function createAsteroidsGame(
     ship.draw();
 
     drawHUD();
-
-    if (state === "gameover") drawOverlay("GAME OVER", `PUNTAJE: ${score}`);
   }
 
   let rafId: number | null = null;

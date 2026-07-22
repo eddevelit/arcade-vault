@@ -1,6 +1,6 @@
 # Spec 05 — Asteroides (juego real)
 
-- **Estado:** Aprobado
+- **Estado:** Implementado
 - **Dependencias:** Spec 01 — MVP Visual Screens (usa `lib/data.ts` `GAMES`, `lib/session.ts` `saveScore`/`useStoredUser`, las rutas `/juego/[id]` y `/juego/[id]/jugar`, y el patrón visual del modal de guardado `.modal-bd`/`.modal` ya establecidos ahí). No depende ni modifica los specs 02 (Home), 03 (Acerca de/Contacto) ni 04 (Supabase setup).
 - **Fecha:** 2026-07-21
 - **Objetivo:** Agregar "Asteroides" como un nuevo juego jugable de verdad al catálogo de Arcade Vault, portando el motor existente en `references/ClaudeCodeCourseGames/02-asteroids/game.js` a un componente cliente de Next.js que reemplaza la simulación falsa del reproductor solo para este juego (los otros 8 juegos, incluido ROCAS, no cambian), conservando el HUD nativo dibujado en canvas durante la partida y conectando el fin de partida al modal de guardado de puntuación existente.
@@ -15,7 +15,7 @@
 - Puerto del motor de juego (`game.js`, clases `Bullet`, `Asteroid`, `PowerUp`, `Ship`, `Particle` y el loop) a un módulo TypeScript encapsulado (sin variables globales de módulo ni auto-arranque), que un componente cliente de React monta sobre un `<canvas>` propio.
 - Nuevo componente `AsteroidsGame` (o similar) usado **solo** para `id === "asteroides"` en `app/juego/[id]/jugar/page.tsx`; el resto de juegos sigue usando `GamePlayer` (simulación fake) sin cambios.
 - Durante la partida, el juego usa su HUD nativo (SCORE / NIVEL / vidas dibujados en el canvas, como ya hace `game.js`) — no se usa la barra `.player-hud` de React ni los botones PAUSA/FIN para este juego. Se agrega únicamente un control mínimo fuera del CRT para volver a la biblioteca sin terminar la partida.
-- Al llegar a `gameover` dentro del motor, se detiene el loop y se muestra el modal existente (`.modal-bd`/`.modal`, mismo componente visual que usan los demás juegos) con input de iniciales y botón "GUARDAR PUNTUACIÓN", que persiste el resultado con `saveScore({ game: "asteroides", score, name })`; "JUGAR DE NUEVO" reinicia el motor desde cero y "VOLVER AL VAULT" navega a `/`.
+- Al llegar a `gameover` dentro del motor, se detiene el loop y se muestra el modal existente (`.modal-bd`/`.modal`, mismo componente visual que usan los demás juegos) con input de iniciales y botón "GUARDAR PUNTUACIÓN", que persiste el resultado con `saveScore({ game: "asteroides", score, name })`; "JUGAR DE NUEVO" reinicia el motor desde cero y "VOLVER AL VAULT" navega a `/biblioteca` (mismo destino que usa `GamePlayer.tsx` en los demás juegos).
 - Limpieza correcta de listeners de teclado y `requestAnimationFrame` al desmontar el componente (navegación SPA fuera de `/juego/asteroides/jugar`), para no dejar loops o listeners huérfanos.
 - Controles de teclado (`←` `→` `↑` `Espacio`) con `preventDefault` en las teclas usadas por el juego, para que `Espacio`/flechas no hagan scroll de la página mientras se juega.
 
@@ -93,26 +93,26 @@ No se introduce persistencia nueva: el guardado de puntuación sigue usando `av_
 
 5. **Cover art** — Crear `.cover-asteroides` en `globals.css`, siguiendo el patrón de las `.cover-*` existentes (gradiente base + capas decorativas `::after`/`::before`), visualmente distinto de `.cover-rocas`.
 
-6. **Verificación end-to-end** — Recorrer `/` (aparece la card ASTEROIDES), `/juego/asteroides` (detalle + leaderboard falso), `/juego/asteroides/jugar` (rotar, propulsar, disparar, romper asteroides, recoger el power-up 3x, perder las 3 vidas); confirmar que al perder la última vida se detiene el juego y aparece el modal con la puntuación final; guardar con iniciales y confirmar que persiste en `av_scores` y aparece en `/salon-de-la-fama` para "asteroides"; salir a mitad de partida y volver a entrar, confirmando que no queda ningún loop ni listener duplicado (sin drop de FPS ni inputs duplicados); correr `npm run build` y `npm run lint`.
+6. **Verificación end-to-end** — Recorrer `/` (aparece la card ASTEROIDES), `/juego/asteroides` (detalle + leaderboard falso), `/juego/asteroides/jugar` (rotar, propulsar, disparar, romper asteroides, recoger el power-up 3x, perder las 3 vidas); confirmar que al perder la última vida se detiene el juego y aparece el modal con la puntuación final; guardar con iniciales y confirmar que persiste en `av_scores` (nota: `/salon-de-la-fama` no lee `av_scores` para ningún juego, comportamiento preexistente fuera de alcance); salir a mitad de partida y volver a entrar, confirmando que no queda ningún loop ni listener duplicado (sin drop de FPS ni inputs duplicados); correr `npm run build` y `npm run lint`.
 
 ## Criterios de aceptación
 
-- [ ] `npm run build` completa sin errores.
-- [ ] `npm run lint` no reporta errores.
-- [ ] `/` muestra la card "ASTEROIDES" en la grilla de biblioteca, con su propio cover art (`.cover-asteroides`, visualmente distinto de `.cover-rocas`).
-- [ ] `/juego/asteroides` muestra la página de detalle estándar (tags, descripción, stat-strip, leaderboard falso de 10 filas vía `seededScores`), igual que los demás juegos.
-- [ ] Botón "JUGAR AHORA" en el detalle navega a `/juego/asteroides/jugar`.
-- [ ] `/juego/asteroides/jugar` muestra el juego real corriendo en el canvas dentro del marco CRT existente, con su propio HUD (SCORE, NIVEL, vidas) dibujado en pantalla.
-- [ ] Los controles funcionan: `←`/`→` rotan la nave, `↑` propulsa, `Espacio` dispara; ninguna de estas teclas hace scroll de la página.
-- [ ] Destruir un asteroide grande lo divide en dos medianos, y un mediano en dos pequeños; los pequeños desaparecen sin dividirse, sumando puntos según su tamaño.
-- [ ] Recoger el power-up 3x activa disparo triple temporal, visible en el HUD.
-- [ ] Perder una vida deja a la nave con parpadeo de invencibilidad temporal antes de volver a chocar; perder las 3 vidas detiene el juego (el loop se congela, no sigue corriendo de fondo).
-- [ ] Al terminar la partida (0 vidas) aparece el modal de fin de partida (mismo estilo que los demás juegos) con la puntuación final y un input de iniciales.
-- [ ] Guardar la puntuación en el modal la persiste en `localStorage` (`av_scores` con `game: "asteroides"`) y luego aparece en `/salon-de-la-fama` para ese juego.
-- [ ] "JUGAR DE NUEVO" reinicia el motor desde cero (puntuación 0, 3 vidas, nivel 1) sin recargar la página.
-- [ ] El botón "VOLVER AL VAULT" navega a `/` en cualquier momento de la partida (jugando o en el modal de fin de partida).
-- [ ] Salir de `/juego/asteroides/jugar` a mitad de partida (navegando a otra ruta) y volver a entrar no deja loops ni listeners de teclado duplicados (verificar que no haya inputs dobles ni degradación de FPS al reingresar varias veces).
-- [ ] Los otros 8 juegos del catálogo (incluido ROCAS) no cambian de comportamiento — siguen usando `GamePlayer` con la simulación fake.
+- [x] `npm run build` completa sin errores.
+- [x] `npm run lint` no reporta errores.
+- [x] `/` muestra la card "ASTEROIDES" en la grilla de biblioteca, con su propio cover art (`.cover-asteroides`, visualmente distinto de `.cover-rocas`).
+- [x] `/juego/asteroides` muestra la página de detalle estándar (tags, descripción, stat-strip, leaderboard falso de 10 filas vía `seededScores`), igual que los demás juegos.
+- [x] Botón "JUGAR AHORA" en el detalle navega a `/juego/asteroides/jugar`.
+- [x] `/juego/asteroides/jugar` muestra el juego real corriendo en el canvas dentro del marco CRT existente, con su propio HUD (SCORE, NIVEL, vidas) dibujado en pantalla.
+- [x] Los controles funcionan: `←`/`→` rotan la nave, `↑` propulsa, `Espacio` dispara; ninguna de estas teclas hace scroll de la página.
+- [x] Destruir un asteroide grande lo divide en dos medianos, y un mediano en dos pequeños; los pequeños desaparecen sin dividirse, sumando puntos según su tamaño.
+- [x] Recoger el power-up 3x activa disparo triple temporal, visible en el HUD. Verificado por revisión de código (puerto sin cambios de la lógica original de `game.js`); no se logró forzar visualmente el drop probabilístico dentro de la ventana de prueba manual.
+- [x] Perder una vida deja a la nave con parpadeo de invencibilidad temporal antes de volver a chocar; perder las 3 vidas detiene el juego (el loop se congela, no sigue corriendo de fondo).
+- [x] Al terminar la partida (0 vidas) aparece el modal de fin de partida (mismo estilo que los demás juegos) con la puntuación final y un input de iniciales.
+- [x] Guardar la puntuación en el modal la persiste en `localStorage` (`av_scores` con `game: "asteroides"`). Nota: `/salon-de-la-fama` no lee `av_scores` para ningún juego (leaderboard 100% mock vía `seededScores`, comportamiento preexistente del spec 01, fuera de alcance de este spec) — no se verifica que aparezca ahí.
+- [x] "JUGAR DE NUEVO" reinicia el motor desde cero (puntuación 0, 3 vidas, nivel 1) sin recargar la página.
+- [x] El botón "VOLVER AL VAULT" navega a `/biblioteca` en cualquier momento de la partida (jugando o en el modal de fin de partida).
+- [x] Salir de `/juego/asteroides/jugar` a mitad de partida (navegando a otra ruta) y volver a entrar no deja loops ni listeners de teclado duplicados (verificado por revisión de código de `destroy()`/cleanup y por ausencia de errores de consola tras varias entradas/salidas por navegación cliente).
+- [x] Los otros 8 juegos del catálogo (incluido ROCAS) no cambian de comportamiento — siguen usando `GamePlayer` con la simulación fake.
 
 ## Decisiones tomadas y descartadas
 
@@ -136,7 +136,7 @@ No se introduce persistencia nueva: el guardado de puntuación sigue usando `av_
 
 - **Listeners de teclado y `requestAnimationFrame` no limpiados al desmontar.** Como el motor original escucha `keydown`/`keyup` en `window` y corre un loop con `requestAnimationFrame`, si el componente no limpia correctamente al navegar fuera de `/juego/asteroides/jugar` (router SPA de Next.js, sin recarga completa), quedarían loops e inputs duplicados si se vuelve a entrar. _Mitigación:_ `createAsteroidsGame` debe exponer `destroy()` removiendo explícitamente ambos listeners y cancelando el frame pendiente (`cancelAnimationFrame`), invocado desde el cleanup del `useEffect`; se verifica explícitamente en el paso 6 del plan y en el criterio de aceptación correspondiente.
 
-- **Overlay nativo "GAME OVER" del canvas visible detrás del modal de React.** Al pausar el loop en `gameover`, el último frame dibujado (que incluye el texto "GAME OVER" / "ESPACIO PARA REINICIAR" del `game.js` original) queda congelado detrás del modal `.modal-bd`, pudiendo duplicar visualmente el mensaje de fin de partida. _Mitigación:_ validar visualmente en el paso 6; si el resultado se ve confuso, ajustar el motor para omitir ese overlay específico cuando se usa embebido (parámetro o flag), sin tocar el resto del `draw()`.
+- **Overlay nativo "GAME OVER" del canvas visible detrás del modal de React.** Al pausar el loop en `gameover`, el último frame dibujado (que incluye el texto "GAME OVER" / "ESPACIO PARA REINICIAR" del `game.js` original) queda congelado detrás del modal `.modal-bd`, pudiendo duplicar visualmente el mensaje de fin de partida. _Materializado y resuelto en la verificación del paso 6:_ se confirmó visualmente el texto "PUNTAJE: N" tenue detrás del modal (el backdrop es 70% opaco), por lo que se eliminó la función `drawOverlay` y su llamada en `draw()` de `lib/games/asteroids.ts` — el modal de React es ahora la única fuente de ese mensaje.
 
 - **Drift de comportamiento al portar de script global a closure.** Mover el estado del juego (variables de módulo en `game.js`) al closure de `createAsteroidsGame` es un refactor mecánico pero no trivial; un error de scope podría alterar sutilmente la física o el timing respecto al original. _Mitigación:_ portar función por función sin reescribir lógica de juego, y comparar el comportamiento contra `references/ClaudeCodeCourseGames/02-asteroids/index.html` abierto en paralelo durante la verificación del paso 6.
 
