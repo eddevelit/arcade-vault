@@ -7,7 +7,8 @@ import {
   createAsteroidsGame,
   type AsteroidsHandle,
 } from "@/lib/games/asteroids";
-import { saveScore, useStoredUser } from "@/lib/session";
+import { useStoredUser } from "@/lib/session";
+import { saveScore } from "@/lib/scores";
 
 interface AsteroidsGameProps {
   game: Game;
@@ -21,6 +22,8 @@ export default function AsteroidsGame({ game }: AsteroidsGameProps) {
   const [finalScore, setFinalScore] = useState(0);
   const [nameOverride, setNameOverride] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const name = nameOverride ?? (user ? user.name : "INVITADO");
 
@@ -42,8 +45,23 @@ export default function AsteroidsGame({ game }: AsteroidsGameProps) {
   const restart = () => {
     setOver(false);
     setSaved(false);
+    setSaving(false);
+    setSaveError(false);
     setNameOverride(null);
     handleRef.current?.restart();
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveError(false);
+    try {
+      await saveScore({ game: game.id, score: finalScore, name });
+      setSaved(true);
+    } catch {
+      setSaveError(true);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -93,16 +111,24 @@ export default function AsteroidsGame({ game }: AsteroidsGameProps) {
                 />
                 <button
                   className="btn yellow"
-                  onClick={() => {
-                    saveScore({ game: game.id, score: finalScore, name });
-                    setSaved(true);
-                  }}
+                  onClick={handleSave}
+                  disabled={saving}
                 >
-                  GUARDAR PUNTUACIÓN
+                  {saving ? "GUARDANDO..." : "GUARDAR PUNTUACIÓN"}
                 </button>
               </div>
             ) : (
               <div className="toast-saved">▸ PUNTUACIÓN GUARDADA_</div>
+            )}
+            {saveError && (
+              <div className="input-row">
+                <span className="mono" style={{ color: "var(--ink-dim)" }}>
+                  ERROR AL GUARDAR LA PUNTUACIÓN.
+                </span>
+                <button className="btn magenta" onClick={handleSave}>
+                  REINTENTAR
+                </button>
+              </div>
             )}
             <div className="actions">
               <button className="btn" onClick={restart}>
