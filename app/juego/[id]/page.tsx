@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getGame } from "@/lib/games";
-import { getTopScores } from "@/lib/scores";
+import { getGameStats, getTopScores } from "@/lib/scores";
 
 export default async function GameDetailPage({
   params,
@@ -13,6 +13,7 @@ export default async function GameDetailPage({
   if (!game) notFound();
 
   const scores = await getTopScores(id, 10);
+  const stats = await getGameStats(id);
 
   return (
     <div className="av-detail fade-in">
@@ -32,7 +33,7 @@ export default async function GameDetailPage({
           <div className="stat-strip">
             <div>
               <div className="l">Partidas</div>
-              <div className="v">{game.plays}</div>
+              <div className="v">{stats.plays}</div>
             </div>
             <div>
               <div className="l">Mejor global</div>
@@ -43,7 +44,7 @@ export default async function GameDetailPage({
                   textShadow: "0 0 6px rgba(255,0,110,0.5)",
                 }}
               >
-                {game.best.toLocaleString("es-ES")}
+                {stats.best.toLocaleString("es-ES")}
               </div>
             </div>
             <div>

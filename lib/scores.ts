@@ -29,6 +29,32 @@ export async function getTopScores(
   return data.map((row, i) => toScoreRow(row, i + 1));
 }
 
+// server-only — usado en app/juego/[id]/page.tsx para las estadísticas en vivo (partidas jugadas y mejor puntuación)
+export async function getGameStats(
+  gameId: string,
+): Promise<{ plays: number; best: number }> {
+  const supabase = await createServerClient();
+
+  const [{ count, error: countError }, { data: bestRow, error: bestError }] =
+    await Promise.all([
+      supabase
+        .from("scores")
+        .select("*", { count: "exact", head: true })
+        .eq("game_id", gameId),
+      supabase
+        .from("scores")
+        .select("score")
+        .eq("game_id", gameId)
+        .order("score", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+  if (countError) throw countError;
+  if (bestError) throw bestError;
+
+  return { plays: count ?? 0, best: bestRow?.score ?? 0 };
+}
+
 // server-only — usado en app/salon-de-la-fama/page.tsx, una sola query para todos los juegos de la tabla `games` (hoy, solo asteroides)
 export async function getAllTopScores(
   limit = 12,
