@@ -1,6 +1,6 @@
 # Spec 06 — Tabla de juegos en Supabase
 
-- **Estado:** Aprobado
+- **Estado:** Implementado
 - **Dependencias:** Spec 04 — Supabase setup (usa `lib/supabase/server.ts` para el cliente de lectura). Modifica el comportamiento de Spec 01 (las páginas dejan de leer el array `GAMES` que ese spec introdujo, aunque el array se conserva en el código sin consumidores) y de Spec 05 (la entrada `asteroides` pasa a vivir en la tabla en vez del array). No depende del Spec 07 (leaderboard) — al contrario, el 07 dependerá de este.
 - **Fecha:** 2026-07-22
 - **Objetivo:** Migrar **solo el juego `asteroides`** de `GAMES` (`lib/data.ts`) a una tabla `games` en Supabase, con lectura pública desde Server Components. Las interfaces públicas (home, biblioteca, salón de la fama, detalle/juego) pasan a mostrar únicamente el juego migrado; los otros 8 juegos quedan en `GAMES` como referencia sin consumidores, a la espera de una migración incremental futura.
