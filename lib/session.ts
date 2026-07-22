@@ -1,17 +1,9 @@
 import { useSyncExternalStore } from "react";
 
 const USER_KEY = "av_user";
-const SCORES_KEY = "av_scores";
 
 export interface StoredUser {
   name: string;
-}
-
-export interface StoredScoreEntry {
-  game: string;
-  score: number;
-  name: string;
-  at: number;
 }
 
 let cachedUserRaw: string | null | undefined;
@@ -57,22 +49,4 @@ export function saveUser(user: StoredUser): void {
 export function clearUser(): void {
   localStorage.removeItem(USER_KEY);
   userListeners.forEach((listener) => listener());
-}
-
-export function getScores(): StoredScoreEntry[] {
-  try {
-    return JSON.parse(localStorage.getItem(SCORES_KEY) || "[]");
-  } catch {
-    return [];
-  }
-}
-
-export function saveScore(entry: Omit<StoredScoreEntry, "at">): void {
-  try {
-    const all = getScores();
-    all.push({ ...entry, at: Date.now() });
-    localStorage.setItem(SCORES_KEY, JSON.stringify(all));
-  } catch {
-    // localStorage puede fallar en modo privado o con cuota excedida; se ignora, igual que en app.jsx
-  }
 }
