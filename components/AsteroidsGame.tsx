@@ -8,7 +8,7 @@ import {
   type AsteroidsHandle,
 } from "@/lib/games/asteroids";
 import { useStoredUser } from "@/lib/session";
-import { saveScore } from "@/lib/scores";
+import { saveScore } from "@/lib/scores-client";
 
 interface AsteroidsGameProps {
   game: Game;

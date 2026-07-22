@@ -1,5 +1,4 @@
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import type { ScoreRow } from "@/lib/data";
 
 function toScoreRow(
@@ -48,19 +47,4 @@ export async function getAllTopScores(
     (byGame[row.game_id] ??= []).push(toScoreRow(row, row.rank));
   }
   return byGame;
-}
-
-// client-safe — reemplaza al saveScore actual de lib/session.ts
-export async function saveScore(entry: {
-  game: string;
-  score: number;
-  name: string;
-}): Promise<void> {
-  const supabase = createBrowserClient();
-  const { error } = await supabase.from("scores").insert({
-    game_id: entry.game,
-    player_name: entry.name,
-    score: entry.score,
-  });
-  if (error) throw error;
 }

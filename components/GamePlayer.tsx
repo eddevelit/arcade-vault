@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Game } from "@/lib/data";
 import { useStoredUser } from "@/lib/session";
-import { saveScore } from "@/lib/scores";
+import { saveScore } from "@/lib/scores-client";
 
 interface GamePlayerProps {
   game: Game;
