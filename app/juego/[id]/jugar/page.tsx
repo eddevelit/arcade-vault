@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getGame } from "@/lib/games";
 import GamePlayer from "@/components/GamePlayer";
-import AsteroidsGame from "@/components/AsteroidsGame";
+import { GAME_COMPONENTS } from "@/lib/games/registry";
 
 export default async function GamePlayerPage({
   params,
@@ -12,7 +12,6 @@ export default async function GamePlayerPage({
   const game = await getGame(id);
   if (!game) notFound();
 
-  if (game.id === "asteroides") return <AsteroidsGame game={game} />;
-
-  return <GamePlayer game={game} />;
+  const Component = GAME_COMPONENTS[game.id] ?? GamePlayer;
+  return <Component game={game} />;
 }
