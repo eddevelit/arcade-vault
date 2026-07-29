@@ -906,6 +906,35 @@ a {
   image-rendering: pixelated;
 }
 
+.cover-arkanoid {
+  background: linear-gradient(165deg, #2a0620, #0a0a18);
+}
+.cover-arkanoid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(#ff3b3b, #ff3b3b) 8% 18%/14% 10% no-repeat,
+    linear-gradient(#f5ff00, #f5ff00) 24% 18%/14% 10% no-repeat,
+    linear-gradient(#00f5ff, #00f5ff) 40% 18%/14% 10% no-repeat,
+    linear-gradient(#ff006e, #ff006e) 56% 18%/14% 10% no-repeat,
+    linear-gradient(#ff5fa8, #ff5fa8) 72% 18%/14% 10% no-repeat,
+    linear-gradient(#00ff88, #00ff88) 88% 18%/12% 10% no-repeat,
+    radial-gradient(circle at 46% 60%, #fff 0 5px, transparent 6px);
+  filter: drop-shadow(0 0 6px rgba(255, 0, 110, 0.55));
+  image-rendering: pixelated;
+}
+.cover-arkanoid::before {
+  content: "";
+  position: absolute;
+  left: 36%;
+  bottom: 18%;
+  width: 28%;
+  height: 5%;
+  background: var(--magenta);
+  box-shadow: 0 0 10px var(--magenta);
+}
+
 /* ===== detail screen ===== */
 .av-detail {
   display: grid;
