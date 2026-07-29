@@ -1,6 +1,6 @@
 # Spec 08 — Tetris (juego real)
 
-- **Estado:** Aprobado
+- **Estado:** Implementado
 - **Dependencias:** Spec 05 — Asteroides (juego real) (usa como referencia canónica el patrón `create<Nombre>Game`/`<Nombre>Handle` y el componente clon de `AsteroidsGame.tsx`). Spec 06 — Tabla de juegos en Supabase (la tabla `games` ya existe; este spec solo agrega una fila nueva). Spec 07 — Leaderboard real (`lib/scores.ts`/`lib/scores-client.ts` ya son genéricos por `game_id`; no se modifican). Modifica `app/juego/[id]/jugar/page.tsx`: introduce `lib/games/registry.ts` (nuevo), reemplazando el `if (game.id === "asteroides")` hardcodeado — Asteroides pasa a ser la primera entrada del registry, sin cambio de comportamiento visible.
 - **Fecha:** 2026-07-28
 - **Objetivo:** Agregar "Tetris" como segundo juego jugable real del catálogo, portando el motor de `references/ClaudeCodeCourseGames/03-tetris/game.js` (tablero + preview de siguiente pieza, HUD y pausa dibujados en canvas) a un componente cliente de Next.js, e introducir un registry de juegos que reemplaza el dispatcher hardcodeado para escalar a múltiples juegos reales.
@@ -109,22 +109,22 @@ export const GAME_COMPONENTS: Record<string, ComponentType<{ game: Game }>> = {
 
 ## Criterios de aceptación
 
-- [ ] `npm run build` completa sin errores.
-- [ ] `npm run lint` no reporta errores.
-- [ ] `/` muestra la card "TETRIS" en la grilla de biblioteca, con su propio cover art (`.cover-tetris`, visualmente distinto de `.cover-rocas` y `.cover-asteroides`).
-- [ ] `/juego/tetris` muestra la página de detalle estándar (tags, descripción, stat-strip, leaderboard real vía `getTopScores`), igual que Asteroides.
-- [ ] Botón "JUGAR AHORA" en el detalle navega a `/juego/tetris/jugar`.
-- [ ] `/juego/tetris/jugar` muestra el juego real corriendo en el canvas del tablero dentro del marco CRT existente, con su propio HUD (SCORE, LINES, LEVEL) dibujado en pantalla, y un canvas de preview mostrando la siguiente pieza.
-- [ ] Los controles funcionan: `←`/`→` mueven la pieza, `↑`/`X` rotan, `↓` hace soft drop sumando puntos, `Espacio` hace hard drop; ninguna de estas teclas hace scroll de la página.
-- [ ] Completar una o más líneas las elimina del tablero, suma puntos según `LINE_SCORES × nivel`, y el nivel sube cada 10 líneas acumuladas (aumentando la velocidad de caída).
-- [ ] Presionar `P` pausa la partida (el loop deja de avanzar, aparece "PAUSA" dibujado en el canvas) y volver a presionar `P` la reanuda.
-- [ ] Que una pieza nueva colisione al aparecer (tablero lleno) detiene el juego y aparece el modal de fin de partida con la puntuación final.
-- [ ] Guardar la puntuación en el modal la persiste en Supabase (tabla `scores`, `game_id: "tetris"`) y aparece en el leaderboard real de `/juego/tetris` y en el tab correspondiente de `/salon-de-la-fama`.
-- [ ] "JUGAR DE NUEVO" reinicia el motor desde cero (puntuación 0, tablero vacío, nivel 1) sin recargar la página.
-- [ ] El botón "VOLVER AL VAULT" navega a `/biblioteca` en cualquier momento de la partida (jugando, pausado o en el modal de fin de partida).
-- [ ] Salir de `/juego/tetris/jugar` a mitad de partida y volver a entrar no deja loops ni listeners de teclado duplicados.
-- [ ] `/juego/asteroides` y `/juego/asteroides/jugar` siguen funcionando exactamente igual después del refactor del registry (`lib/games/registry.ts`).
-- [ ] `lib/scores.ts` y `lib/scores-client.ts` no cambian — el leaderboard de Tetris funciona sin tocarlos.
+- [x] `npm run build` completa sin errores.
+- [x] `npm run lint` no reporta errores.
+- [x] `/` muestra la card "TETRIS" en la grilla de biblioteca, con su propio cover art (`.cover-tetris`, visualmente distinto de `.cover-rocas` y `.cover-asteroides`).
+- [x] `/juego/tetris` muestra la página de detalle estándar (tags, descripción, stat-strip, leaderboard real vía `getTopScores`), igual que Asteroides.
+- [x] Botón "JUGAR AHORA" en el detalle navega a `/juego/tetris/jugar`.
+- [x] `/juego/tetris/jugar` muestra el juego real corriendo en el canvas del tablero dentro del marco CRT existente, con su propio HUD (SCORE, LINES, LEVEL) dibujado en pantalla, y un canvas de preview mostrando la siguiente pieza.
+- [x] Los controles funcionan: `←`/`→` mueven la pieza, `↑`/`X` rotan, `↓` hace soft drop sumando puntos, `Espacio` hace hard drop; ninguna de estas teclas hace scroll de la página.
+- [x] Completar una o más líneas las elimina del tablero, suma puntos según `LINE_SCORES × nivel`, y el nivel sube cada 10 líneas acumuladas (aumentando la velocidad de caída).
+- [x] Presionar `P` pausa la partida (el loop deja de avanzar, aparece "PAUSA" dibujado en el canvas) y volver a presionar `P` la reanuda.
+- [x] Que una pieza nueva colisione al aparecer (tablero lleno) detiene el juego y aparece el modal de fin de partida con la puntuación final.
+- [x] Guardar la puntuación en el modal la persiste en Supabase (tabla `scores`, `game_id: "tetris"`) y aparece en el leaderboard real de `/juego/tetris` y en el tab correspondiente de `/salon-de-la-fama`.
+- [x] "JUGAR DE NUEVO" reinicia el motor desde cero (puntuación 0, tablero vacío, nivel 1) sin recargar la página.
+- [x] El botón "VOLVER AL VAULT" navega a `/biblioteca` en cualquier momento de la partida (jugando, pausado o en el modal de fin de partida).
+- [x] Salir de `/juego/tetris/jugar` a mitad de partida y volver a entrar no deja loops ni listeners de teclado duplicados.
+- [x] `/juego/asteroides` y `/juego/asteroides/jugar` siguen funcionando exactamente igual después del refactor del registry (`lib/games/registry.ts`).
+- [x] `lib/scores.ts` y `lib/scores-client.ts` no cambian — el leaderboard de Tetris funciona sin tocarlos.
 
 ## Decisiones tomadas y descartadas
 
