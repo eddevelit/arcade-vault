@@ -12,4 +12,7 @@ export const GAME_COMPONENTS: Record<string, ComponentType<{ game: Game }>> = {
   arkanoid: dynamic(() => import("@/components/ArkanoidGame"), {
     ssr: false,
   }),
+  serpiente: dynamic(() => import("@/components/SerpienteGame"), {
+    ssr: false,
+  }),
 };
