@@ -131,24 +131,24 @@ export const GAME_COMPONENTS: Record<string, ComponentType<{ game: Game }>> = {
 
 ## Criterios de aceptación
 
-- [ ] `npm run build` completa sin errores.
-- [ ] `npm run lint` no reporta errores.
-- [ ] `/` muestra la card "SERPIENTE" en la grilla de biblioteca, con su propio cover art (`.cover-serpiente`, visualmente distinto de `.cover-rocas`/`.cover-asteroides`/`.cover-tetris`/`.cover-arkanoid`).
-- [ ] `/juego/serpiente` muestra la página de detalle estándar (tags, descripción, stat-strip, leaderboard real vía `getTopScores`), igual que Asteroides/Tetris/Arkanoid.
-- [ ] Botón "JUGAR AHORA" en el detalle navega a `/juego/serpiente/jugar`.
-- [ ] `/juego/serpiente/jugar` muestra el juego real corriendo en el canvas dentro del marco CRT existente, con su propio HUD (Score/velocidad) dibujado en pantalla; `fruits.png` carga antes de que arranque el loop.
-- [ ] Las 4 flechas cambian la dirección de la serpiente; ninguna hace scroll de la página. Presionar la dirección opuesta a la actual no provoca una colisión instantánea contra el propio segundo segmento (se ignora la inversión de 180°).
-- [ ] Comer la fruta hace crecer la serpiente un segmento, suma puntos al score, reubica la fruta en una posición libre aleatoria, y acelera levemente el ritmo del juego.
-- [ ] Chocar la cabeza contra el borde del tablero detiene el juego y dispara el fin de partida.
-- [ ] Chocar la cabeza contra cualquier segmento del propio cuerpo detiene el juego y dispara el fin de partida.
-- [ ] Al terminar la partida (por cualquiera de las dos colisiones) aparece el modal de fin de partida (mismo estilo que los demás juegos) con la puntuación final y un input de iniciales.
-- [ ] Guardar la puntuación en el modal la persiste en Supabase (tabla `scores`, `game_id: "serpiente"`) y aparece en el leaderboard real de `/juego/serpiente` y en el tab correspondiente de `/salon-de-la-fama`.
-- [ ] "JUGAR DE NUEVO" reinicia el motor desde cero (serpiente en su largo/posición inicial, velocidad inicial, puntuación 0) sin recargar la página.
-- [ ] El botón "VOLVER AL VAULT" navega a `/biblioteca` en cualquier momento de la partida (jugando o en el modal de fin de partida).
-- [ ] Salir de `/juego/serpiente/jugar` a mitad de partida (incluso durante la carga async de `fruits.png`) y volver a entrar no deja loops, listeners de teclado duplicados, ni arranques pendientes.
-- [ ] `/juego/asteroides`, `/juego/tetris` y `/juego/arkanoid` (y sus rutas `/jugar`) siguen funcionando exactamente igual después de agregar la entrada `serpiente` al registry.
-- [ ] `lib/scores.ts` y `lib/scores-client.ts` no cambian — el leaderboard de Serpiente funciona sin tocarlos.
-- [ ] Ningún archivo de audio (`.mp3`) se agrega a `public/games/serpiente/`.
+- [x] `npm run build` completa sin errores.
+- [x] `npm run lint` no reporta errores.
+- [x] `/` muestra la card "SERPIENTE" en la grilla de biblioteca, con su propio cover art (`.cover-serpiente`, visualmente distinto de `.cover-rocas`/`.cover-asteroides`/`.cover-tetris`/`.cover-arkanoid`).
+- [x] `/juego/serpiente` muestra la página de detalle estándar (tags, descripción, stat-strip, leaderboard real vía `getTopScores`), igual que Asteroides/Tetris/Arkanoid.
+- [x] Botón "JUGAR AHORA" en el detalle navega a `/juego/serpiente/jugar`.
+- [x] `/juego/serpiente/jugar` muestra el juego real corriendo en el canvas dentro del marco CRT existente, con su propio HUD (Score/velocidad) dibujado en pantalla; `fruits.png` carga antes de que arranque el loop.
+- [x] Las 4 flechas cambian la dirección de la serpiente; ninguna hace scroll de la página. Presionar la dirección opuesta a la actual no provoca una colisión instantánea contra el propio segundo segmento (se ignora la inversión de 180°).
+- [x] Comer la fruta hace crecer la serpiente un segmento, suma puntos al score, reubica la fruta en una posición libre aleatoria, y acelera levemente el ritmo del juego.
+- [x] Chocar la cabeza contra el borde del tablero detiene el juego y dispara el fin de partida.
+- [x] Chocar la cabeza contra cualquier segmento del propio cuerpo detiene el juego y dispara el fin de partida.
+- [x] Al terminar la partida (por cualquiera de las dos colisiones) aparece el modal de fin de partida (mismo estilo que los demás juegos) con la puntuación final y un input de iniciales.
+- [x] Guardar la puntuación en el modal la persiste en Supabase (tabla `scores`, `game_id: "serpiente"`) y aparece en el leaderboard real de `/juego/serpiente` y en el tab correspondiente de `/salon-de-la-fama`.
+- [x] "JUGAR DE NUEVO" reinicia el motor desde cero (serpiente en su largo/posición inicial, velocidad inicial, puntuación 0) sin recargar la página.
+- [x] El botón "VOLVER AL VAULT" navega a `/biblioteca` en cualquier momento de la partida (jugando o en el modal de fin de partida).
+- [x] Salir de `/juego/serpiente/jugar` a mitad de partida (incluso durante la carga async de `fruits.png`) y volver a entrar no deja loops, listeners de teclado duplicados, ni arranques pendientes.
+- [x] `/juego/asteroides`, `/juego/tetris` y `/juego/arkanoid` (y sus rutas `/jugar`) siguen funcionando exactamente igual después de agregar la entrada `serpiente` al registry.
+- [x] `lib/scores.ts` y `lib/scores-client.ts` no cambian — el leaderboard de Serpiente funciona sin tocarlos.
+- [x] Ningún archivo de audio (`.mp3`) se agrega a `public/games/serpiente/`.
 
 ## Decisiones tomadas y descartadas
 
