@@ -935,6 +935,44 @@ a {
   box-shadow: 0 0 10px var(--magenta);
 }
 
+.cover-serpiente {
+  background: linear-gradient(150deg, #1f1a02, #0a0a18);
+}
+.cover-serpiente::after {
+  content: "";
+  position: absolute;
+  inset: 8% 15% 8% 15%;
+  background:
+    linear-gradient(var(--green), var(--green)) 0% 70%/14% 14% no-repeat,
+    linear-gradient(var(--green), var(--green)) 14% 70%/14% 14% no-repeat,
+    linear-gradient(var(--green), var(--green)) 14% 56%/14% 14% no-repeat,
+    linear-gradient(var(--green), var(--green)) 28% 56%/14% 14% no-repeat,
+    linear-gradient(var(--green), var(--green)) 28% 42%/14% 14% no-repeat,
+    linear-gradient(var(--green), var(--green)) 42% 42%/14% 14% no-repeat,
+    linear-gradient(var(--green), var(--green)) 42% 28%/14% 14% no-repeat,
+    linear-gradient(var(--green), var(--green)) 56% 28%/14% 14% no-repeat,
+    repeating-linear-gradient(
+      0deg,
+      rgba(245, 255, 0, 0.07) 0 1px,
+      transparent 1px 20px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(245, 255, 0, 0.07) 0 1px,
+      transparent 1px 20px
+    );
+  filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.5));
+}
+.cover-serpiente::before {
+  content: "●";
+  position: absolute;
+  left: 64%;
+  top: 22%;
+  color: var(--yellow);
+  font-size: 20px;
+  text-shadow: 0 0 8px var(--yellow);
+}
+
 /* ===== detail screen ===== */
 .av-detail {
   display: grid;
