@@ -75,6 +75,8 @@ Adding a playable game touches six integration points; the `/nuevo-juego` skill 
 
 Game assets live in `public/games/<slug>/` (e.g. the Arkanoid spritesheet, the Serpiente fruit atlas).
 
+`references/implemented-games.md` is the living reference for the four real games — per-game categoría, color, cover class, engine, controls, assets and leaderboard state. Read it before touching the catalog, and update it when a new game ships.
+
 ## Environment
 
 `.env.template` lists what `.env.local` must define: `RESEND_API_KEY`, `SUPABASE_DB_PASSWORD`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
@@ -83,6 +85,10 @@ Game assets live in `public/games/<slug>/` (e.g. the Arkanoid spritesheet, the S
 
 - **MCP servers** (`.mcp.json` + `.claude/settings.local.json`): `supabase` (schema, migrations, SQL) and `playwright` (browser verification). Playwright artifacts go to `.playwright-mcp/` and `.playwright-screenshots/`, both gitignored except their `.gitkeep`.
 - **Hook** (`.claude/settings.json`): a `PostToolUse` hook runs `eslint --fix` + `prettier --write` on every file written or edited. Don't manually format after editing — it is already handled.
+
+## Agentes
+
+- **`game-planner`** (`.claude/agents/game-planner.md`) — decide _qué_ juego agregar después. Lee el catálogo (`references/implemented-games.md`, `lib/games/`, `specs/`), diagnostica los huecos (categorías/colores/mecánicas sin cubrir) y propone 3 candidatos rankeados con uno recomendado. Registra cada sugerencia y su veredicto en `references/game-suggestions-todo.md` para no repetir propuestas entre corridas. Corre **antes** de `/nuevo-juego`; no escribe specs ni código, y el único archivo que modifica es su bitácora.
 
 ## Skills
 
