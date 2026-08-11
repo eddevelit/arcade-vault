@@ -6,7 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Arcade Vault — a platform for playing games online and competing for the highest score ("Es una plataforma para jugar online y competir por la mayor cantidad de puntos"). The repo is currently a fresh `create-next-app` scaffold (Next.js 16.2.10, App Router, TypeScript, Tailwind CSS v4, ESLint) — `app/page.tsx` and `app/layout.tsx` still contain the default boilerplate, no game/vault features exist yet.
+Arcade Vault — a platform for playing games online and competing for the highest score ("Es una plataforma para jugar online y competir por la mayor cantidad de puntos"). Next.js 16.2.10 (App Router, TypeScript, Tailwind CSS v4), Supabase for the game catalog + leaderboards, Resend for the contact form.
+
+Built spec by spec (`specs/01` … `specs/10`). Current state: 5 public routes, 4 real playable canvas games (Asteroides, Tetris, Arkanoid, Serpiente) with real score persistence, plus a simulated player (`GamePlayer`) as the fallback for any catalog entry without an engine.
+
+**All user-facing copy, game ids, and spec documents are in Spanish.** Keep it that way.
 
 ## Critical: this Next.js version has breaking changes vs. your training data
 
@@ -15,26 +19,89 @@ Arcade Vault — a platform for playing games online and competing for the highe
 - `next build` no longer runs ESLint automatically — lint is a separate, explicit step (`npm run lint`).
 - The `lint` script invokes the ESLint CLI directly (`"lint": "eslint"`), not `next lint`.
 - Turbopack is the default bundler for both `next dev` and `next build` (pass `--webpack` to opt out).
+- Route `params` are a `Promise` and must be awaited (see `app/juego/[id]/page.tsx`).
 
-There is no test runner configured in `package.json` yet.
+## Commands
 
-## Skills
-Usa siempre /front-end Design para diseñar la interfaz de usuario. 
+```bash
+npm run dev      # dev server (Turbopack)
+npm run build    # production build — does NOT lint
+npm run lint     # eslint (flat config)
+npm run format   # prettier --write .
+```
 
-## Architecture notes
+There is no test runner configured. Verification is done by `npm run build` + `npm run lint` + manual/Playwright-MCP checks in the browser.
+
+## Architecture
 
 - **App Router only**, no `src/` directory — routes live directly under `app/`.
 - **Import alias**: `@/*` maps to the repo root (`tsconfig.json`).
-- **Styling**: Tailwind CSS v4 via `@tailwindcss/postcss` (see `postcss.config.mjs`); theme tokens (colors, fonts) are declared with `@theme inline` in `app/globals.css`, not a `tailwind.config.js`.
-- **Fonts**: Geist Sans/Mono loaded via `next/font/google` in `app/layout.tsx` and exposed as CSS variables consumed by the Tailwind theme.
-- **Linting**: flat config (`eslint.config.mjs`) composing `eslint-config-next/core-web-vitals` and `eslint-config-next/typescript`.
+- **Routes**: `/` (home), `/biblioteca`, `/juego/[id]` (detail + leaderboard), `/juego/[id]/jugar` (player), `/salon-de-la-fama`, `/acerca-de`, `/login`, and `POST /api/contacto`.
+- **Server/Client split**: pages are Server Components that fetch from Supabase and pass data down to a `*Client` component (`HomeClient`, `BibliotecaClient`, `HallOfFameClient`) for interactivity.
+- **Styling**: Tailwind CSS v4 via `@tailwindcss/postcss`; theme tokens declared with `@theme inline` in `app/globals.css`, not a `tailwind.config.js`. In practice most of the retro UI lives in ~2900 lines of hand-written CSS in `globals.css` (`.av-*`, `.card`, `.cover-*`, `.crt*`, `.modal*`) driven by the CSS variables `--cyan` / `--magenta` / `--yellow` / `--green`. New UI should reuse those classes, not reinvent them in Tailwind utilities.
+- **Fonts**: Press Start 2P (pixel), JetBrains Mono + Courier Prime (mono) via `next/font/google` in `app/layout.tsx`, exposed as `--pixel` / `--mono`.
+- **Auth is simulated**: `lib/session.ts` stores `{ name }` under `av_user` in `localStorage` and exposes it via `useSyncExternalStore` (`useStoredUser`). There is no Supabase Auth yet.
+- **`lib/data.ts`**: still exports the legacy `GAMES` array — **it has no consumers**; the catalog comes from Supabase. Only the `Game`/`ScoreRow` types and `CATS` are live. Don't add games there.
+- **Linting**: flat config (`eslint.config.mjs`) composing `eslint-config-next/core-web-vitals` and `eslint-config-next/typescript`. Prettier formats everything.
+
+### Data layer (Supabase)
+
+Remote project only — no local Supabase stack, no versioned DDL in the repo. Schema changes go through the `supabase` MCP server (`apply_migration`).
+
+| Object                 | Purpose                                                                                                                 |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `games`                | Catalog: `id, title, short, long, cat, cover, color, best, plays, sort_order`. `cat` and `color` are CHECK-constrained. |
+| `scores`               | `game_id → games.id` (FK), `player_name`, `score`, `created_at`.                                                        |
+| `best_scores` (view)   | Best score per player per game.                                                                                         |
+| `ranked_scores` (view) | Scores with a `rank` per game.                                                                                          |
+
+Access modules — all generic by `game_id`, nothing game-specific:
+
+- `lib/supabase/server.ts` / `lib/supabase/client.ts` — `@supabase/ssr` clients.
+- `lib/games.ts` — `getGames()`, `getGame(id)` (server).
+- `lib/scores.ts` — `getTopScores`, `getAllTopScores`, `getGameStats` (server-only).
+- `lib/scores-client.ts` — `saveScore` (browser).
+
+### Game architecture
+
+Adding a playable game touches six integration points; the `/nuevo-juego` skill (`.claude/skills/nuevo-juego/SKILL.md`) documents them in full and is the source of truth. Summary:
+
+1. **Engine** — `lib/games/<slug>.ts`: pure canvas 2D, no React, exposed as a factory `create<Nombre>Game(canvas, onGameOver) → { destroy, restart }`. All state lives in the closure (never module globals); `destroy()` cancels the RAF and removes every listener; `onGameOver(score)` fires exactly once. `lib/games/asteroids.ts` is the canonical reference.
+2. **Client component** — `components/<Nombre>Game.tsx`: clone of `AsteroidsGame.tsx` (same props `{ game }`, same `over/finalScore/saved/saving/saveError` states, same `.crt` frame and `.modal` save flow).
+3. **Registry** — add an entry to `GAME_COMPONENTS` in `lib/games/registry.ts` (`dynamic(..., { ssr: false })`). `GameLauncher` resolves `GAME_COMPONENTS[game.id] ?? GamePlayer`; the dispatcher itself is done — don't touch it.
+4. **Row in `games`** — via `apply_migration` on the Supabase MCP server.
+5. **Cover art** — a `.cover-<slug>` rule in `app/globals.css`, visually distinct from the existing covers.
+6. **Leaderboard** — automatic. Once the `games` row exists, `/juego/<slug>` and `/salon-de-la-fama` show real scores through the FK. Never re-implement `lib/scores.ts` / `lib/scores-client.ts`.
+
+Game assets live in `public/games/<slug>/` (e.g. the Arkanoid spritesheet, the Serpiente fruit atlas).
+
+## Environment
+
+`.env.template` lists what `.env.local` must define: `RESEND_API_KEY`, `SUPABASE_DB_PASSWORD`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+
+## Tooling in this repo
+
+- **MCP servers** (`.mcp.json` + `.claude/settings.local.json`): `supabase` (schema, migrations, SQL) and `playwright` (browser verification). Playwright artifacts go to `.playwright-mcp/` and `.playwright-screenshots/`, both gitignored except their `.gitkeep`.
+- **Hook** (`.claude/settings.json`): a `PostToolUse` hook runs `eslint --fix` + `prettier --write` on every file written or edited. Don't manually format after editing — it is already handled.
+
+## Skills
+
+- **`/frontend-design`** — usar siempre para diseñar o rediseñar interfaz de usuario.
+- **`/spec`** — design a spec (questions first, then section by section). Output only, no code.
+- **`/spec-impl NN-<slug>`** — implement an approved spec; creates its own `spec-NN-<slug>` branch.
+- **`/nuevo-juego`** — project-local skill (`.claude/skills/nuevo-juego/`): a specialized `/spec` that designs the spec for a new playable game + leaderboard, with the six integration points above baked in. Use it instead of plain `/spec` for any new game.
+
+`/spec` and `/spec-impl` come from https://github.com/Klerith/fernando-skills (installed globally). If they're missing, install with `npx skills@latest add Klerith/fernando-skills` rather than improvising an equivalent workflow.
 
 ## Spec Driven Design workflow
 
-This project intends to follow spec-driven development using `/spec` and `/spec-impl` commands, per the practices at https://github.com/Klerith/fernando-skills. Those skills are not yet installed in this repo (no `.claude/` directory present) — install with:
+Every feature starts as `specs/NN-<slug>.md` and follows this loop:
 
-```bash
-npx skills@latest add Klerith/fernando-skills
-```
+1. `/spec` (or `/nuevo-juego` for games) → writes the spec in `Draft`.
+2. The **user** reviews it and flips the state to `Aprobado`. Claude never self-approves.
+3. `/spec-impl NN-<slug>` → creates branch `spec-NN-<slug>` (auto, per `AutoCreateBranch: true` in `specs/.spec-config.yml`), implements it, and the branch is merged via PR into `main`.
+4. The spec's state becomes `Implementado`.
 
-If `/spec` or `/spec-impl` are invoked and the skills aren't present, install them first rather than improvising an equivalent workflow.
+Spec documents are in Spanish and share a fixed shape: header bullets (`Estado` / `Dependencias` / `Fecha` / `Objetivo`), `## Alcance` (Incluye / No incluye), `## Modelo de datos`, `## Plan de implementación`, `## Criterios de aceptación`, `## Decisiones tomadas y descartadas`, `## Riesgos identificados`. Match that shape and level of detail — `05-asteroides.md`, `06-tabla-juegos-supabase.md` and `07-leaderboard-real.md` are the gold standard.
+
+Specs so far: 01 pantallas MVP · 02 homepage · 03 acerca-de + contacto (Resend) · 04 setup Supabase · 05 Asteroides · 06 tabla `games` · 07 leaderboard real · 08 Tetris (introdujo el registry) · 09 Arkanoid · 10 Serpiente.
