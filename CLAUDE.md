@@ -89,6 +89,7 @@ Game assets live in `public/games/<slug>/` (e.g. the Arkanoid spritesheet, the S
 ## Agentes
 
 - **`game-planner`** (`.claude/agents/game-planner.md`) — decide _qué_ juego agregar después. Lee el catálogo (`references/implemented-games.md`, `lib/games/`, `specs/`), diagnostica los huecos (categorías/colores/mecánicas sin cubrir) y propone 3 candidatos rankeados con uno recomendado. Registra cada sugerencia y su veredicto en `references/game-suggestions-todo.md` para no repetir propuestas entre corridas. Corre **antes** de `/nuevo-juego`; no escribe specs ni código, y el único archivo que modifica es su bitácora.
+- **`game-jam`** (`.claude/agents/game-jam.md`) — recibe un **tema** y escribe **tres specs de juego completos** en `specs/game-jam/<game-id>/spec.md`, con la misma forma y densidad que los specs 08/09/10 (los 6 puntos de integración incluidos). Corre de punta a punta **sin preguntar nada** y deja los tres en `Draft`. Es el modo exploratorio, paralelo a `game-planner` (que entrega una shortlist) y a `/nuevo-juego` (que conversa un solo spec). Los specs de jam viven fuera de la numeración oficial: para implementar uno hay que moverlo a `specs/NN-<slug>.md`, aprobarlo, y recién ahí correr `/spec-impl`. No escribe código, no toca Supabase, y no modifica la bitácora de `game-planner`.
 
 ## Skills
 
