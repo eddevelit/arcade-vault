@@ -1,7 +1,52 @@
+import { DEFAULT_SKIN, type SkinId } from "@/lib/games/skins";
+
 export interface SerpienteHandle {
   destroy: () => void;
   restart: () => void;
+  setSkin: (skin: SkinId) => void;
 }
+
+export interface SerpientePalette {
+  bg: string;
+  grid: string;
+  snakeHead: string;
+  snakeBody: string;
+  hud: string;
+  /** Tinte de la fruta; `null` deja el sprite original sin teñir. */
+  fruitTint: string | null;
+  /** shadowBlur del glow; 0 desactiva el efecto por completo. */
+  glow: number;
+}
+
+const SERPIENTE_SKINS: Record<SkinId, SerpientePalette> = {
+  clasico: {
+    bg: "#0a0a0a",
+    grid: "rgba(255, 255, 255, 0.06)",
+    snakeHead: "#8CFF7A",
+    snakeBody: "#3FA637",
+    hud: "#fff",
+    fruitTint: null,
+    glow: 0,
+  },
+  neon: {
+    bg: "#06020e",
+    grid: "rgba(255, 0, 255, 0.10)",
+    snakeHead: "#ff0",
+    snakeBody: "#0ff",
+    hud: "#0ff",
+    fruitTint: "#f0f",
+    glow: 10,
+  },
+  retro: {
+    bg: "#140c00",
+    grid: "rgba(255, 176, 0, 0.10)",
+    snakeHead: "#ffd980",
+    snakeBody: "#c98a00",
+    hud: "#ffb000",
+    fruitTint: "#ffb000",
+    glow: 0,
+  },
+};
 
 type Direction = "up" | "down" | "left" | "right";
 
@@ -45,13 +90,26 @@ const KEY_TO_DIRECTION: Record<string, Direction> = {
 // tomadas de sprites.js. Se usa una única fruta fija: manzana.
 const FRUIT_SPRITE = { x: 2786, y: 136, w: 110, h: 160 } as const;
 
-const GRID_LINE = "rgba(255, 255, 255, 0.06)";
-
 export function createSerpienteGame(
   canvas: HTMLCanvasElement,
   onGameOver: (finalScore: number) => void,
+  skin: SkinId = DEFAULT_SKIN,
 ): SerpienteHandle {
   const ctx = canvas.getContext("2d")!;
+
+  let palette = SERPIENTE_SKINS[skin] ?? SERPIENTE_SKINS[DEFAULT_SKIN];
+
+  // Enciende el glow de la skin y lo apaga siempre al salir, para que no se
+  // filtre al resto del frame (HUD y grilla incluidos).
+  function withGlow(color: string, draw: () => void) {
+    if (palette.glow > 0) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = palette.glow;
+    }
+    draw();
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
+  }
 
   let snake: Cell[] = [];
   let food: Cell = { x: 0, y: 0 };
@@ -64,6 +122,12 @@ export function createSerpienteGame(
 
   let fruitImage: HTMLImageElement | null = null;
   let destroyed = false;
+
+  // Versión teñida del sprite de la fruta, cacheada por color de tinte. Se
+  // construye en el primer dibujo posterior a un cambio de skin, nunca en la
+  // carga de la imagen, para no tocar el arranque asíncrono del loop.
+  let tintedFruit: HTMLCanvasElement | null = null;
+  let tintedFruitKey: string | null = null;
 
   let animId: number | null = null;
   let lastTime: number | null = null;
@@ -136,7 +200,7 @@ export function createSerpienteGame(
   }
 
   function drawGrid() {
-    ctx.strokeStyle = GRID_LINE;
+    ctx.strokeStyle = palette.grid;
     ctx.lineWidth = 0.5;
     for (let c = 1; c < COLS; c++) {
       ctx.beginPath();
@@ -153,40 +217,99 @@ export function createSerpienteGame(
   }
 
   function drawSnake() {
-    snake.forEach((seg, i) => {
-      ctx.fillStyle = i === 0 ? "#8CFF7A" : "#3FA637";
-      ctx.fillRect(seg.x * CELL + 1, seg.y * CELL + 1, CELL - 2, CELL - 2);
+    // Un solo bloque de glow por grupo: encender la sombra por segmento sería
+    // caro con la serpiente ya larga.
+    withGlow(palette.snakeBody, () => {
+      ctx.fillStyle = palette.snakeBody;
+      for (let i = 1; i < snake.length; i++) {
+        const seg = snake[i];
+        ctx.fillRect(seg.x * CELL + 1, seg.y * CELL + 1, CELL - 2, CELL - 2);
+      }
+    });
+    withGlow(palette.snakeHead, () => {
+      const head = snake[0];
+      ctx.fillStyle = palette.snakeHead;
+      ctx.fillRect(head.x * CELL + 1, head.y * CELL + 1, CELL - 2, CELL - 2);
     });
   }
 
-  function drawFood() {
-    if (!fruitImage) return;
-    ctx.drawImage(
-      fruitImage,
+  // Tiñe el sprite con blend `color`: reemplaza matiz y saturación pero conserva
+  // la luminosidad original, así la fruta mantiene su sombreado. El `destination-in`
+  // final restaura el canal alpha, que el fillRect había pisado.
+  function buildTintedFruit(tint: string): HTMLCanvasElement | null {
+    if (!fruitImage) return null;
+    const off = document.createElement("canvas");
+    off.width = FRUIT_SPRITE.w;
+    off.height = FRUIT_SPRITE.h;
+    const octx = off.getContext("2d");
+    if (!octx) return null;
+
+    const args = [
       FRUIT_SPRITE.x,
       FRUIT_SPRITE.y,
       FRUIT_SPRITE.w,
       FRUIT_SPRITE.h,
-      food.x * CELL,
-      food.y * CELL,
-      CELL,
-      CELL,
+      0,
+      0,
+      FRUIT_SPRITE.w,
+      FRUIT_SPRITE.h,
+    ] as const;
+
+    octx.drawImage(fruitImage, ...args);
+    octx.globalCompositeOperation = "color";
+    octx.fillStyle = tint;
+    octx.fillRect(0, 0, off.width, off.height);
+    octx.globalCompositeOperation = "destination-in";
+    octx.drawImage(fruitImage, ...args);
+    octx.globalCompositeOperation = "source-over";
+    return off;
+  }
+
+  function drawFood() {
+    if (!fruitImage) return;
+    const tint = palette.fruitTint;
+
+    if (!tint) {
+      ctx.drawImage(
+        fruitImage,
+        FRUIT_SPRITE.x,
+        FRUIT_SPRITE.y,
+        FRUIT_SPRITE.w,
+        FRUIT_SPRITE.h,
+        food.x * CELL,
+        food.y * CELL,
+        CELL,
+        CELL,
+      );
+      return;
+    }
+
+    if (tintedFruitKey !== tint) {
+      tintedFruit = buildTintedFruit(tint);
+      tintedFruitKey = tint;
+    }
+    if (!tintedFruit) return;
+
+    withGlow(tint, () =>
+      ctx.drawImage(tintedFruit!, food.x * CELL, food.y * CELL, CELL, CELL),
     );
   }
 
   function drawHUD() {
-    ctx.fillStyle = "#fff";
     ctx.font = "bold 18px monospace";
     ctx.textBaseline = "top";
-    ctx.textAlign = "left";
-    ctx.fillText(`SCORE ${score}`, 10, 10);
-    ctx.textAlign = "right";
-    const speed = Math.round((1000 / tickInterval) * 10) / 10;
-    ctx.fillText(`VELOCIDAD ${speed}`, canvas.width - 10, 10);
+    withGlow(palette.hud, () => {
+      ctx.fillStyle = palette.hud;
+      ctx.textAlign = "left";
+      ctx.fillText(`SCORE ${score}`, 10, 10);
+      ctx.textAlign = "right";
+      const speed = Math.round((1000 / tickInterval) * 10) / 10;
+      ctx.fillText(`VELOCIDAD ${speed}`, canvas.width - 10, 10);
+    });
   }
 
   function draw() {
-    ctx.fillStyle = "#0a0a0a";
+    ctx.fillStyle = palette.bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawGrid();
     drawSnake();
@@ -259,12 +382,20 @@ export function createSerpienteGame(
       destroyed = true;
       if (animId !== null) cancelAnimationFrame(animId);
       animId = null;
+      tintedFruit = null;
+      tintedFruitKey = null;
       window.removeEventListener("keydown", onKeyDown);
     },
     restart() {
       resetState();
       if (animId !== null) cancelAnimationFrame(animId);
       startLoop();
+    },
+    // Sólo repinta: no reinicia la partida, el score ni la velocidad acumulada.
+    // Con la partida terminada el loop ya no corre, así que se fuerza un frame.
+    setSkin(next: SkinId) {
+      palette = SERPIENTE_SKINS[next] ?? SERPIENTE_SKINS[DEFAULT_SKIN];
+      if (animId === null && fruitImage) draw();
     },
   };
 }

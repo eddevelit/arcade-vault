@@ -7,6 +7,14 @@ import {
   createAsteroidsGame,
   type AsteroidsHandle,
 } from "@/lib/games/asteroids";
+import {
+  DEFAULT_SKIN,
+  SKIN_IDS,
+  SKIN_LABELS,
+  getSkin,
+  saveSkin,
+  type SkinId,
+} from "@/lib/games/skins";
 import { useStoredUser } from "@/lib/session";
 import { saveScore } from "@/lib/scores-client";
 
@@ -24,23 +32,40 @@ export default function AsteroidsGame({ game }: AsteroidsGameProps) {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
+  const [skin, setSkin] = useState<SkinId>(DEFAULT_SKIN);
+  const gameIdRef = useRef(game.id);
 
   const name = nameOverride ?? (user ? user.name : "INVITADO");
 
+  // Deps [] a propósito: cambiar de skin nunca debe recrear el motor ni tirar
+  // la partida en curso. La skin guardada se hidrata acá, ya en el browser.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    handleRef.current = createAsteroidsGame(canvas, (score) => {
-      setFinalScore(score);
-      setOver(true);
-    });
+    const stored = getSkin(gameIdRef.current);
+    setSkin(stored);
+
+    handleRef.current = createAsteroidsGame(
+      canvas,
+      (score) => {
+        setFinalScore(score);
+        setOver(true);
+      },
+      stored,
+    );
 
     return () => {
       handleRef.current?.destroy();
       handleRef.current = null;
     };
   }, []);
+
+  const changeSkin = (next: SkinId) => {
+    setSkin(next);
+    saveSkin(gameIdRef.current, next);
+    handleRef.current?.setSkin(next);
+  };
 
   const restart = () => {
     setOver(false);
@@ -69,10 +94,25 @@ export default function AsteroidsGame({ game }: AsteroidsGameProps) {
       <div
         style={{
           display: "flex",
-          justifyContent: "flex-end",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
           marginBottom: 18,
         }}
       >
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {SKIN_IDS.map((id) => (
+            <button
+              key={id}
+              className={id === skin ? "btn yellow" : "btn ghost"}
+              onClick={() => changeSkin(id)}
+              aria-pressed={id === skin}
+            >
+              {SKIN_LABELS[id]}
+            </button>
+          ))}
+        </div>
         <Link href="/biblioteca" className="btn ghost">
           VOLVER AL VAULT
         </Link>

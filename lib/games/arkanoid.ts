@@ -5,12 +5,70 @@ import {
   EXPLOSION_FRAMES,
   EXPLOSION_DURATION,
 } from "./arkanoid-sprites";
+import { DEFAULT_SKIN, type SkinId } from "./skins";
 
 export interface ArkanoidHandle {
   destroy: () => void;
   restart: () => void;
   togglePause: () => void;
+  setSkin: (skin: SkinId) => void;
 }
+
+export interface ArkanoidPalette {
+  bg: string;
+  overlay: string;
+  overlayText: string;
+  pauseOverlay: string;
+  pauseText: string;
+  hud: string;
+  /**
+   * Los sprites vienen de un spritesheet y se dibujan con `drawImage`, que
+   * ignora `fillStyle`. La única forma de teñirlos sin tocar el asset es un
+   * `ctx.filter`; `"none"` los deja exactamente como están.
+   */
+  spriteFilter: string;
+  /** shadowBlur del glow; 0 desactiva el efecto por completo. */
+  glow: number;
+  glowColor: string;
+}
+
+const ARKANOID_SKINS: Record<SkinId, ArkanoidPalette> = {
+  clasico: {
+    bg: "#000",
+    overlay: "rgba(0, 0, 0, 0.6)",
+    overlayText: "#fff",
+    pauseOverlay: "rgba(0, 0, 0, 0.65)",
+    pauseText: "#fff",
+    hud: "#fff",
+    spriteFilter: "none",
+    glow: 0,
+    glowColor: "transparent",
+  },
+  neon: {
+    bg: "#06020e",
+    overlay: "rgba(6, 2, 14, 0.72)",
+    overlayText: "#0ff",
+    pauseOverlay: "rgba(6, 2, 14, 0.78)",
+    pauseText: "#ff0",
+    hud: "#0ff",
+    spriteFilter: "saturate(2.4) brightness(1.15) contrast(1.1)",
+    glow: 14,
+    glowColor: "#f0f",
+  },
+  retro: {
+    bg: "#140c00",
+    overlay: "rgba(20, 12, 0, 0.72)",
+    overlayText: "#ffb000",
+    pauseOverlay: "rgba(20, 12, 0, 0.78)",
+    pauseText: "#ffb000",
+    hud: "#ffb000",
+    // grayscale + sepia colapsa los 7 colores de bloque a un solo matiz ámbar,
+    // conservando su luminancia original como rampa de tonos.
+    spriteFilter: "grayscale(1) sepia(1) saturate(5) brightness(1.35)",
+    glow: 0,
+    glowColor: "transparent",
+  },
+};
 
 interface Paddle {
   x: number;
@@ -132,8 +190,24 @@ const GAME_KEYS = new Set(["ArrowLeft", "ArrowRight", "KeyP", "Escape"]);
 export function createArkanoidGame(
   canvas: HTMLCanvasElement,
   onGameOver: (finalScore: number) => void,
+  skin: SkinId = DEFAULT_SKIN,
 ): ArkanoidHandle {
   const ctx = canvas.getContext("2d")!;
+
+  let palette = ARKANOID_SKINS[skin] ?? ARKANOID_SKINS[DEFAULT_SKIN];
+
+  // Enciende el glow de la skin y lo apaga siempre al salir, para que no se
+  // filtre al resto del frame. Nunca alrededor del loop de bloques: son hasta
+  // 60 `drawImage` por frame y el shadowBlur ahí sale carísimo.
+  function withGlow(color: string, draw: () => void) {
+    if (palette.glow > 0) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = palette.glow;
+    }
+    draw();
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
+  }
 
   const paddle: Paddle = { x: 0, y: 560, w: 81, h: 14 };
   const ball: Ball = { x: 0, y: 0, w: 16, h: 16, vx: 200, vy: -300 };
@@ -296,28 +370,36 @@ export function createArkanoidGame(
   }
 
   function drawOverlay(message: string) {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+    ctx.fillStyle = palette.overlay;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = palette.overlayText;
     ctx.font = "bold 64px monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(message, canvas.width / 2, canvas.height / 2);
+    withGlow(palette.overlayText, () =>
+      ctx.fillText(message, canvas.width / 2, canvas.height / 2),
+    );
   }
 
   function drawPauseOverlay() {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+    ctx.fillStyle = palette.pauseOverlay;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = palette.pauseText;
     ctx.font = "bold 56px monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("PAUSA", canvas.width / 2, canvas.height / 2);
+    withGlow(palette.pauseText, () =>
+      ctx.fillText("PAUSA", canvas.width / 2, canvas.height / 2),
+    );
   }
 
   function draw() {
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = palette.bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // El filtro se setea una sola vez para todo el bloque de sprites: cambiarlo
+    // por cada `drawImage` obliga al canvas a recompilar el filtro en cada llamada.
+    ctx.filter = palette.spriteFilter;
 
     for (const block of blocks) {
       if (block.alive)
@@ -346,23 +428,31 @@ export function createArkanoidGame(
       );
     }
 
-    drawSprite(ctx, "paddle", paddle.x, paddle.y, paddle.w, paddle.h);
-    drawSprite(ctx, "ball", ball.x, ball.y, ball.w, ball.h);
+    withGlow(palette.glowColor, () => {
+      drawSprite(ctx, "paddle", paddle.x, paddle.y, paddle.w, paddle.h);
+      drawSprite(ctx, "ball", ball.x, ball.y, ball.w, ball.h);
+    });
+
+    ctx.filter = "none";
 
     if (gameState === "playing") {
-      ctx.fillStyle = "#fff";
+      ctx.fillStyle = palette.hud;
       ctx.font = "bold 18px monospace";
       ctx.textAlign = "left";
       ctx.textBaseline = "top";
-      ctx.fillText("Score: " + score, 10, 10);
-      ctx.textAlign = "center";
-      ctx.fillText("Nivel: " + currentLevel, canvas.width / 2, 10);
+      withGlow(palette.hud, () => {
+        ctx.fillText("Score: " + score, 10, 10);
+        ctx.textAlign = "center";
+        ctx.fillText("Nivel: " + currentLevel, canvas.width / 2, 10);
+      });
       const ballSize = 16;
       const ballSpacing = 4;
+      ctx.filter = palette.spriteFilter;
       for (let i = 0; i < lives; i++) {
         const bx = canvas.width - 10 - (lives - i) * (ballSize + ballSpacing);
         drawSprite(ctx, "ball", bx, 10, ballSize, ballSize);
       }
+      ctx.filter = "none";
     }
 
     if (gameState === "gameover") drawOverlay("GAME OVER");
@@ -424,5 +514,11 @@ export function createArkanoidGame(
       startLoop();
     },
     togglePause,
+    // Sólo repinta: no reinicia la partida ni resetea el score. Si el loop ya
+    // se detuvo (game over o victoria), fuerza un frame para que el cambio se vea.
+    setSkin(next: SkinId) {
+      palette = ARKANOID_SKINS[next] ?? ARKANOID_SKINS[DEFAULT_SKIN];
+      if (animId === null && !destroyed) draw();
+    },
   };
 }
