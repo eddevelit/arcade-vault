@@ -2,13 +2,34 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { clearUser, useStoredUser } from "@/lib/session";
+
+function subscribeCoarsePointer(callback: () => void): () => void {
+  const mq = window.matchMedia("(pointer: coarse)");
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+function getCoarsePointer(): boolean {
+  return window.matchMedia("(pointer: coarse)").matches;
+}
+
+// El server no conoce el pointer del dispositivo; devolver false ahí evita
+// el desajuste de hidratación (mismo patrón que useStoredUser en session.ts).
+function getServerCoarsePointer(): boolean {
+  return false;
+}
 
 export default function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const user = useStoredUser();
+  const isTouch = useSyncExternalStore(
+    subscribeCoarsePointer,
+    getCoarsePointer,
+    getServerCoarsePointer,
+  );
 
   const isActive = (href: string) => {
     if (href === "/biblioteca")
@@ -21,6 +42,11 @@ export default function Nav() {
   const handleSignOut = () => {
     clearUser();
   };
+
+  // En la pantalla de juego, cuando el gamepad táctil está visible (pointer:
+  // coarse), el navbar se oculta por completo: no compite por espacio con
+  // el D-pad/botones ni queda flotando sobre el canvas.
+  if (pathname.endsWith("/jugar") && isTouch) return null;
 
   return (
     <>
@@ -35,7 +61,10 @@ export default function Nav() {
           <Link href="/" className={isActive("/") ? "active" : ""}>
             Inicio
           </Link>
-          <Link href="/biblioteca" className={isActive("/biblioteca") ? "active" : ""}>
+          <Link
+            href="/biblioteca"
+            className={isActive("/biblioteca") ? "active" : ""}
+          >
             Biblioteca
           </Link>
           <Link
@@ -44,7 +73,10 @@ export default function Nav() {
           >
             Salón de la Fama
           </Link>
-          <Link href="/acerca-de" className={isActive("/acerca-de") ? "active" : ""}>
+          <Link
+            href="/acerca-de"
+            className={isActive("/acerca-de") ? "active" : ""}
+          >
             Acerca de
           </Link>
         </div>
@@ -76,10 +108,17 @@ export default function Nav() {
         onClick={close}
       ></div>
       <aside className={"av-mobile-panel" + (open ? " open" : "")}>
-        <div className="pixel neon-cyan" style={{ fontSize: 11, marginBottom: 16 }}>
+        <div
+          className="pixel neon-cyan"
+          style={{ fontSize: 11, marginBottom: 16 }}
+        >
           MENÚ
         </div>
-        <Link href="/" className={isActive("/") ? "active" : ""} onClick={close}>
+        <Link
+          href="/"
+          className={isActive("/") ? "active" : ""}
+          onClick={close}
+        >
           Inicio
         </Link>
         <Link
@@ -117,7 +156,11 @@ export default function Nav() {
         <div style={{ flex: 1 }}></div>
         <div
           className="pixel"
-          style={{ fontSize: 9, color: "var(--ink-faint)", letterSpacing: "0.16em" }}
+          style={{
+            fontSize: 9,
+            color: "var(--ink-faint)",
+            letterSpacing: "0.16em",
+          }}
         >
           CRÉDITOS · 03
         </div>
