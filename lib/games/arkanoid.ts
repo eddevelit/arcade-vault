@@ -280,6 +280,19 @@ export function createArkanoidGame(
     );
   }
 
+  function onTouchMove(e: TouchEvent) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    if (!touch) return;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const touchX = (touch.clientX - rect.left) * scaleX;
+    paddle.x = Math.max(
+      0,
+      Math.min(canvas.width - paddle.w, touchX - paddle.w / 2),
+    );
+  }
+
   function onKeyDown(e: KeyboardEvent) {
     if (GAME_KEYS.has(e.code)) e.preventDefault();
     if (e.code === "ArrowLeft") keys.ArrowLeft = true;
@@ -293,6 +306,8 @@ export function createArkanoidGame(
   }
 
   canvas.addEventListener("mousemove", onMouseMove);
+  canvas.addEventListener("touchmove", onTouchMove, { passive: false });
+  canvas.addEventListener("touchstart", onTouchMove, { passive: false });
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("keyup", onKeyUp);
 
@@ -501,6 +516,8 @@ export function createArkanoidGame(
       if (animId !== null) cancelAnimationFrame(animId);
       animId = null;
       canvas.removeEventListener("mousemove", onMouseMove);
+      canvas.removeEventListener("touchmove", onTouchMove);
+      canvas.removeEventListener("touchstart", onTouchMove);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     },

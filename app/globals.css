@@ -2928,3 +2928,111 @@ a {
 .term-body .caret {
   animation: blink 1s steps(1) infinite;
 }
+
+/* ===== touch controls (mobile, pointer: coarse) ===== */
+.touch-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding: 16px 12px;
+}
+.touch-controls-cyan {
+  --touch-accent: var(--cyan);
+  --touch-accent-glow: rgba(0, 245, 255, 0.55);
+  --touch-accent-glow-inset: rgba(0, 245, 255, 0.35);
+}
+.touch-controls-magenta {
+  --touch-accent: var(--magenta);
+  --touch-accent-glow: rgba(255, 0, 110, 0.55);
+  --touch-accent-glow-inset: rgba(255, 0, 110, 0.35);
+}
+.touch-controls-yellow {
+  --touch-accent: var(--yellow);
+  --touch-accent-glow: rgba(245, 255, 0, 0.6);
+  --touch-accent-glow-inset: rgba(245, 255, 0, 0.35);
+}
+.touch-controls-green {
+  --touch-accent: var(--green);
+  --touch-accent-glow: rgba(0, 255, 136, 0.55);
+  --touch-accent-glow-inset: rgba(0, 255, 136, 0.35);
+}
+
+.touch-dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  grid-template-rows: repeat(3, 56px);
+  grid-template-areas:
+    ".    up    ."
+    "left .     right"
+    ".    down  .";
+  gap: 4px;
+}
+.touch-dpad-up {
+  grid-area: up;
+}
+.touch-dpad-down {
+  grid-area: down;
+}
+.touch-dpad-left {
+  grid-area: left;
+}
+.touch-dpad-right {
+  grid-area: right;
+}
+
+.touch-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.touch-dpad-btn,
+.touch-action-btn {
+  touch-action: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family: var(--pixel);
+  color: var(--ink-dim);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--ink-faint);
+  cursor: pointer;
+  transition:
+    color 100ms,
+    border-color 100ms,
+    box-shadow 100ms;
+}
+.touch-dpad-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  border-radius: 8px;
+}
+.touch-action-btn {
+  padding: 14px 20px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.touch-dpad-btn.pressed,
+.touch-action-btn.pressed {
+  color: var(--touch-accent);
+  border-color: var(--touch-accent);
+  box-shadow:
+    0 0 14px var(--touch-accent-glow),
+    inset 0 0 8px var(--touch-accent-glow-inset);
+}
+
+@media (max-width: 520px) {
+  .touch-controls {
+    gap: 16px;
+  }
+  .touch-dpad {
+    grid-template-columns: repeat(3, 48px);
+    grid-template-rows: repeat(3, 48px);
+  }
+}

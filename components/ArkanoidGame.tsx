@@ -14,6 +14,7 @@ import {
 } from "@/lib/games/skins";
 import { useStoredUser } from "@/lib/session";
 import { saveScore } from "@/lib/scores-client";
+import TouchControls from "@/components/TouchControls";
 
 interface ArkanoidGameProps {
   game: Game;
@@ -121,7 +122,7 @@ export default function ArkanoidGame({ game }: ArkanoidGameProps) {
             ref={canvasRef}
             width={800}
             height={600}
-            style={{ width: "100%", height: "100%" }}
+            style={{ width: "100%", height: "100%", touchAction: "none" }}
           />
         </div>
         <div className="crt-bottom">
@@ -130,6 +131,12 @@ export default function ArkanoidGame({ game }: ArkanoidGameProps) {
           <span>CARGA · 1MB</span>
         </div>
       </div>
+
+      <TouchControls
+        accent="magenta"
+        showDPad={false}
+        actions={[{ id: "pause", label: "PAUSA", code: "KeyP" }]}
+      />
 
       {over && (
         <div className="modal-bd">
