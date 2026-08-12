@@ -6,6 +6,7 @@ import type { Game } from "@/lib/data";
 import { createTetrisGame, type TetrisHandle } from "@/lib/games/tetris";
 import { useStoredUser } from "@/lib/session";
 import { saveScore } from "@/lib/scores-client";
+import TouchControls from "@/components/TouchControls";
 
 interface TetrisGameProps {
   game: Game;
@@ -91,7 +92,7 @@ export default function TetrisGame({ game }: TetrisGameProps) {
               ref={boardCanvasRef}
               width={300}
               height={600}
-              style={{ width: "100%", height: "100%" }}
+              style={{ width: "100%", height: "100%", touchAction: "none" }}
             />
           </div>
           <div className="crt-bottom">
@@ -125,6 +126,14 @@ export default function TetrisGame({ game }: TetrisGameProps) {
           />
         </div>
       </div>
+
+      <TouchControls
+        accent="green"
+        actions={[
+          { id: "drop", label: "CAÍDA", code: "Space" },
+          { id: "pause", label: "PAUSA", code: "KeyP" },
+        ]}
+      />
 
       {over && (
         <div className="modal-bd">

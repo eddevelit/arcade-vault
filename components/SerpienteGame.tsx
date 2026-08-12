@@ -17,6 +17,7 @@ import {
 } from "@/lib/games/skins";
 import { useStoredUser } from "@/lib/session";
 import { saveScore } from "@/lib/scores-client";
+import TouchControls from "@/components/TouchControls";
 
 interface SerpienteGameProps {
   game: Game;
@@ -124,7 +125,7 @@ export default function SerpienteGame({ game }: SerpienteGameProps) {
             ref={canvasRef}
             width={800}
             height={600}
-            style={{ width: "100%", height: "100%" }}
+            style={{ width: "100%", height: "100%", touchAction: "none" }}
           />
         </div>
         <div className="crt-bottom">
@@ -133,6 +134,8 @@ export default function SerpienteGame({ game }: SerpienteGameProps) {
           <span>CARGA · 1MB</span>
         </div>
       </div>
+
+      <TouchControls accent="yellow" />
 
       {over && (
         <div className="modal-bd">
