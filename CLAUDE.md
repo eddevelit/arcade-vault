@@ -99,6 +99,7 @@ Game assets live in `public/games/<slug>/` (e.g. the Arkanoid spritesheet, the S
 - **`/spec`** — design a spec (questions first, then section by section). Output only, no code.
 - **`/spec-impl NN-<slug>`** — implement an approved spec; creates its own `spec-NN-<slug>` branch.
 - **`/nuevo-juego`** — project-local skill (`.claude/skills/nuevo-juego/`): a specialized `/spec` that designs the spec for a new playable game + leaderboard, with the six integration points above baked in. Use it instead of plain `/spec` for any new game.
+- **`/spec-impl-game NN-<slug>`** — project-local skill (`.claude/skills/spec-impl-game/`): reads and follows `/spec-impl` unmodified (same 4 phases), then chains `skin-designer` → `mobile-porter` in sequence (never in parallel — both can touch the same section of `references/implemented-games.md`) once the spec's acceptance criteria all pass and it's marked `Implementado`. Use it instead of plain `/spec-impl` for game specs, so the mobile/skins QA pass isn't a manual follow-up step.
 
 `/spec` and `/spec-impl` come from https://github.com/Klerith/fernando-skills (installed globally). If they're missing, install with `npx skills@latest add Klerith/fernando-skills` rather than improvising an equivalent workflow.
 
@@ -108,7 +109,7 @@ Every feature starts as `specs/NN-<slug>.md` and follows this loop:
 
 1. `/spec` (or `/nuevo-juego` for games) → writes the spec in `Draft`.
 2. The **user** reviews it and flips the state to `Aprobado`. Claude never self-approves.
-3. `/spec-impl NN-<slug>` → creates branch `spec-NN-<slug>` (auto, per `AutoCreateBranch: true` in `specs/.spec-config.yml`), implements it, and the branch is merged via PR into `main`.
+3. `/spec-impl NN-<slug>` → creates branch `spec-NN-<slug>` (auto, per `AutoCreateBranch: true` in `specs/.spec-config.yml`), implements it, and the branch is merged via PR into `main`. For game specs, use `/spec-impl-game NN-<slug>` instead — same implementation, plus `skin-designer` → `mobile-porter` chained automatically at the end.
 4. The spec's state becomes `Implementado`.
 
 Spec documents are in Spanish and share a fixed shape: header bullets (`Estado` / `Dependencias` / `Fecha` / `Objetivo`), `## Alcance` (Incluye / No incluye), `## Modelo de datos`, `## Plan de implementación`, `## Criterios de aceptación`, `## Decisiones tomadas y descartadas`, `## Riesgos identificados`. Match that shape and level of detail — `05-asteroides.md`, `06-tabla-juegos-supabase.md` and `07-leaderboard-real.md` are the gold standard.
