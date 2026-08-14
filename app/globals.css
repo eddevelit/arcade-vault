@@ -12,6 +12,7 @@
   --magenta: #ff006e;
   --yellow: #f5ff00;
   --green: #00ff88;
+  --lime: #aef200;
   --gold: #ffcf3a;
   --silver: #c7d0e0;
   --bronze: #d97a3a;
@@ -34,6 +35,7 @@
   --color-magenta: var(--magenta);
   --color-yellow: var(--yellow);
   --color-green: var(--green);
+  --color-lime: var(--lime);
   --color-gold: var(--gold);
   --color-silver: var(--silver);
   --color-bronze: var(--bronze);
@@ -971,6 +973,41 @@ a {
   color: var(--yellow);
   font-size: 20px;
   text-shadow: 0 0 8px var(--yellow);
+}
+
+.cover-frogger {
+  background: linear-gradient(
+    180deg,
+    #0f5c1f 0%,
+    #0f5c1f 16%,
+    #111 16%,
+    #111 62%,
+    #00294d 62%,
+    #00294d 100%
+  );
+}
+.cover-frogger::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(#ff3b3b, #ff3b3b) 12% 30%/16% 8% no-repeat,
+    linear-gradient(#ffd23b, #ffd23b) 42% 44%/16% 8% no-repeat,
+    linear-gradient(#3b8bff, #3b8bff) 66% 30%/20% 8% no-repeat,
+    linear-gradient(#7a4a20, #7a4a20) 10% 74%/24% 8% no-repeat,
+    linear-gradient(#7a4a20, #7a4a20) 56% 82%/28% 8% no-repeat;
+  filter: drop-shadow(0 0 6px rgba(174, 242, 0, 0.4));
+}
+.cover-frogger::before {
+  content: "";
+  position: absolute;
+  left: 44%;
+  top: 10%;
+  width: 12%;
+  height: 8%;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 10px var(--lime);
 }
 
 /* ===== detail screen ===== */

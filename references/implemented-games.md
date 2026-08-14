@@ -1,18 +1,19 @@
 # Juegos implementados — Arcade Vault
 
 Catálogo real de juegos jugables, leído de la tabla `public.games` de Supabase.
-Última actualización: 2026-08-10.
+Última actualización: 2026-08-14.
 
 ## Resumen
 
-| #   | `id`         | Título     | Categoría | Color     | Cover CSS           | Spec                            |
-| --- | ------------ | ---------- | --------- | --------- | ------------------- | ------------------------------- |
-| 1   | `asteroides` | ASTEROIDES | SHOOTER   | `cyan`    | `.cover-asteroides` | [05](../specs/05-asteroides.md) |
-| 2   | `tetris`     | TETRIS     | PUZZLE    | `green`   | `.cover-tetris`     | [08](../specs/08-tetris.md)     |
-| 3   | `arkanoid`   | ARKANOID   | ARCADE    | `magenta` | `.cover-arkanoid`   | [09](../specs/09-arkanoid.md)   |
-| 4   | `serpiente`  | SERPIENTE  | ARCADE    | `yellow`  | `.cover-serpiente`  | [10](../specs/10-serpiente.md)  |
+| #   | `id`         | Título     | Categoría | Color     | Cover CSS           | Spec                              |
+| --- | ------------ | ---------- | --------- | --------- | ------------------- | --------------------------------- |
+| 1   | `asteroides` | ASTEROIDES | SHOOTER   | `cyan`    | `.cover-asteroides` | [05](../specs/05-asteroides.md)   |
+| 2   | `tetris`     | TETRIS     | PUZZLE    | `green`   | `.cover-tetris`     | [08](../specs/08-tetris.md)       |
+| 3   | `arkanoid`   | ARKANOID   | ARCADE    | `magenta` | `.cover-arkanoid`   | [09](../specs/09-arkanoid.md)     |
+| 4   | `serpiente`  | SERPIENTE  | ARCADE    | `yellow`  | `.cover-serpiente`  | [10](../specs/10-serpiente.md)    |
+| 5   | `frogger`    | FROGGER    | ARCADE    | `lime`    | `.cover-frogger`    | [12](../specs/12-frogger-core.md) |
 
-Los cuatro están registrados en `lib/games/registry.ts` (`GAME_COMPONENTS`), así que `GameLauncher` monta su motor real en `/juego/<id>/jugar` en vez del reproductor simulado `GamePlayer`.
+Los cinco están registrados en `lib/games/registry.ts` (`GAME_COMPONENTS`), así que `GameLauncher` monta su motor real en `/juego/<id>/jugar` en vez del reproductor simulado `GamePlayer`.
 
 ---
 
@@ -104,9 +105,35 @@ Este spec introdujo `lib/games/registry.ts`, reemplazando el `if (game.id === "a
 
 ---
 
+## 5. FROGGER — `frogger`
+
+- **Categoría:** ARCADE · **Color:** `lime` · **Cover:** `.cover-frogger` · **`sort_order`:** 5
+- **Corto:** Cruza la carretera y el río sin convertirte en papilla.
+- **Largo:** Guía a tu rana a través de una carretera repleta de coches y un río de troncos y tortugas flotantes. Llena las cinco bocas del otro lado para completar la ronda; cada nivel acelera el tráfico y acorta el tiempo. Tres vidas y mucho asfalto por delante.
+
+**Implementación**
+
+|                 |                                                                                                                               |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Motor           | `lib/games/frogger.ts` — `createFroggerGame(canvas, onGameOver, skin?)` / `FroggerHandle` (`destroy` / `restart` / `setSkin`) |
+| Componente      | `components/FroggerGame.tsx`                                                                                                  |
+| Canvas          | 1 canvas de 640×560 (grilla 16×14 de 40px), `.crt-screen` con `aspect-ratio: 8 / 7` propio (no el 4/3 compartido)             |
+| Controles       | ← → ↑ ↓ saltar (celda a celda) · P / Escape pausar · táctil: `TouchControls` (D-pad + botón PAUSA → `KeyP`)                   |
+| Assets externos | Ninguno (todo dibujado con primitivas canvas)                                                                                 |
+| HUD             | Dibujado en canvas (score, nivel, vidas, barra de tiempo de ronda)                                                            |
+| Pausa           | Sí (P / Escape)                                                                                                               |
+| Skins           | `clasico` (default) · `neon` · `retro` — selector en el componente, preferencia en `localStorage` bajo `av_skin_frogger`      |
+| Mobile          | Verificado 2026-08-14 en 375×667 · 430×932 · 768×1024 (táctil) y 1440×900 (control, sin touch) — ver nota abajo               |
+
+**Estado mobile (2026-08-14).** `/juego/frogger` y `/juego/frogger/jugar` verificados con Playwright en los cuatro perfiles, portrait. Se corrigieron dos cosas en `components/FroggerGame.tsx`: el `.crt-screen` no declaraba relación de aspecto propia y estiraba el tablero un 17% a lo ancho (4/3 heredado vs 8/7 real del canvas) — ahora usa `aspectRatio: "8 / 7"` inline, mismo patrón que Tetris con su `1 / 2`, con un tope de `maxWidth: 900` en el `.crt` para que al desestirarse no crezca de alto en desktop; y no montaba `TouchControls`, así que en táctil el juego era injugable — ahora monta `<TouchControls accent="green" actions={[{ id: "pause", label: "PAUSA", code: "KeyP" }]} />` según spec 11 (D-pad = flechas, `KeyP` es la tecla real del motor). El `accent` es `green` y no `lime` (el `color` del juego) porque la union de `TouchControls` no contempla `lime`; queda como pendiente de alcance compartido. El teclado físico sigue funcionando en paralelo en los perfiles táctiles, y `destroy()` no cambió (no se tocó `lib/games/frogger.ts`).
+
+`color: 'lime'` requirió ampliar el `CHECK` de `games.color` (antes sólo cyan/magenta/yellow/green) vía `apply_migration`, y agregar el token `--lime` en `app/globals.css` junto a los demás colores del tema. El spec original (`specs/game-jam/frogger/01-frogger-core.md`, movido a `specs/12-frogger-core.md`) describía props `paused/onScoreChange/onLivesChange/onLevelChange/onGameOver` y una play-page dedicada (`app/games/frogger/play/page.tsx`); se implementó en cambio siguiendo el patrón real de los otros cuatro juegos — `{ game }` + `create<Nombre>Game(canvas, onGameOver) → {destroy, restart}` + HUD sólo en canvas + ruta genérica `/juego/frogger/jugar` vía registry — por ser el patrón efectivamente vigente en el repo.
+
+---
+
 ## Estado del leaderboard
 
-Puntuaciones reales en la tabla `scores` (FK `scores.game_id → games.id`), al 2026-08-10:
+Puntuaciones reales en la tabla `scores` (FK `scores.game_id → games.id`), al 2026-08-14:
 
 | `id`         | Partidas guardadas | Jugadores distintos | Mejor puntuación real |
 | ------------ | -----------------: | ------------------: | --------------------: |
@@ -114,6 +141,7 @@ Puntuaciones reales en la tabla `scores` (FK `scores.game_id → games.id`), al 
 | `tetris`     |                  2 |                   2 |                 1 060 |
 | `arkanoid`   |                  2 |                   2 |                   650 |
 | `serpiente`  |                  1 |                   1 |                   100 |
+| `frogger`    |                  2 |                   2 |                   100 |
 
 Son datos de prueba de la verificación end-to-end de cada spec, no tráfico real.
 
@@ -127,6 +155,7 @@ Son datos de prueba de la verificación end-to-end de cada spec, no tráfico rea
 | `tetris`     |       45 200 |      `"7.4K"` |
 | `arkanoid`   |       38 900 |      `"6.1K"` |
 | `serpiente`  |        4 200 |      `"7.5K"` |
+| `frogger`    |            0 |         `"0"` |
 
 Dónde se usa cada una:
 
@@ -141,4 +170,4 @@ Por eso ASTEROIDES aparece con `0` en las tarjetas pese a tener la mejor puntuac
 
 Usá el skill `/nuevo-juego` (`.claude/skills/nuevo-juego/SKILL.md`), que genera el spec cubriendo los seis puntos de integración: motor → componente → entrada en el registry → fila en `games` → cover CSS → leaderboard (automático por el FK, no requiere código). Después `/spec-impl NN-<slug>` lo implementa.
 
-Los 8 juegos del array `GAMES` en `lib/data.ts` (BLOQUE BUSTER, CAÍDA, SERPENTINA, GLOTÓN, INVASORES, ROCAS, RANARIA, DUELO PIXEL) son **maquetas del MVP visual sin consumidores** — no están en Supabase, no son alcanzables y no deben confundirse con los cuatro juegos de arriba.
+Los 8 juegos del array `GAMES` en `lib/data.ts` (BLOQUE BUSTER, CAÍDA, SERPENTINA, GLOTÓN, INVASORES, ROCAS, RANARIA, DUELO PIXEL) son **maquetas del MVP visual sin consumidores** — no están en Supabase, no son alcanzables y no deben confundirse con los cinco juegos de arriba.
