@@ -1,7 +1,124 @@
+import { DEFAULT_SKIN, type SkinId } from "@/lib/games/skins";
+
 export interface FroggerHandle {
   destroy: () => void;
   restart: () => void;
+  setSkin: (skin: SkinId) => void;
 }
+
+export interface FroggerPalette {
+  goalBandBg: string;
+  riverBg: string;
+  safeBg: string;
+  roadBg: string;
+  goalEmpty: string;
+  goalFilled: string;
+  goalBorder: string;
+  /** Siempre 3 tonos: el auto elige por `baseCol % 3`, igual en las tres skins. */
+  carBodies: [string, string, string];
+  carWheel: string;
+  truckBody: string;
+  truckCab: string;
+  logBody: string;
+  logGrain: string;
+  turtleShell: string;
+  frogBody: string;
+  frogEye: string;
+  frogPupil: string;
+  hud: string;
+  lifeIcon: string;
+  timerHigh: string;
+  timerMid: string;
+  timerLow: string;
+  overlay: string;
+  overlayText: string;
+  /** shadowBlur del glow; 0 desactiva el efecto por completo. */
+  glow: number;
+}
+
+const FROGGER_SKINS: Record<SkinId, FroggerPalette> = {
+  clasico: {
+    goalBandBg: "#0a3d0a",
+    riverBg: "#00294d",
+    safeBg: "#0f5c1f",
+    roadBg: "#111",
+    goalEmpty: "#134d13",
+    goalFilled: "#062b06",
+    goalBorder: "#d4af37",
+    carBodies: ["#ff3b3b", "#ffd23b", "#3b8bff"],
+    carWheel: "#111",
+    truckBody: "#999",
+    truckCab: "#555",
+    logBody: "#7a4a20",
+    logGrain: "#5c3714",
+    turtleShell: "#2f8f4e",
+    frogBody: "#39ff6a",
+    frogEye: "#fff",
+    frogPupil: "#111",
+    hud: "#fff",
+    lifeIcon: "#39ff6a",
+    timerHigh: "#39ff6a",
+    timerMid: "#ffd23b",
+    timerLow: "#ff3b3b",
+    overlay: "rgba(0,0,0,0.6)",
+    overlayText: "#fff",
+    glow: 0,
+  },
+  neon: {
+    goalBandBg: "#12042a",
+    riverBg: "#080a2c",
+    safeBg: "#1a0630",
+    roadBg: "#06020e",
+    goalEmpty: "#2a0a4a",
+    goalFilled: "#0d0320",
+    goalBorder: "#ff0",
+    carBodies: ["#f0f", "#ff3bd0", "#ff0"],
+    carWheel: "#06020e",
+    truckBody: "#ff0",
+    truckCab: "#f0f",
+    logBody: "#0ff",
+    logGrain: "#0a7d99",
+    turtleShell: "#39ffd0",
+    frogBody: "#5cff9a",
+    frogEye: "#fff",
+    frogPupil: "#06020e",
+    hud: "#0ff",
+    lifeIcon: "#5cff9a",
+    timerHigh: "#0ff",
+    timerMid: "#ff0",
+    timerLow: "#f0f",
+    overlay: "rgba(6,2,14,0.72)",
+    overlayText: "#0ff",
+    glow: 10,
+  },
+  retro: {
+    goalBandBg: "#0e3a1b",
+    riverBg: "#07200f",
+    safeBg: "#0e3a1b",
+    roadBg: "#03140a",
+    goalEmpty: "#07200f",
+    goalFilled: "#1f8a35",
+    goalBorder: "#33ff33",
+    carBodies: ["#33ff33", "#26c22c", "#1f8a35"],
+    carWheel: "#03140a",
+    truckBody: "#1f8a35",
+    truckCab: "#26c22c",
+    logBody: "#1f8a35",
+    logGrain: "#07200f",
+    turtleShell: "#26c22c",
+    frogBody: "#33ff33",
+    frogEye: "#0a2a14",
+    frogPupil: "#33ff33",
+    hud: "#33ff33",
+    lifeIcon: "#33ff33",
+    timerHigh: "#1f8a35",
+    timerMid: "#26c22c",
+    timerLow: "#33ff33",
+    overlay: "rgba(3,20,10,0.72)",
+    overlayText: "#33ff33",
+    glow: 0,
+  },
+};
 
 const COLS = 16;
 const ROWS = 14;
@@ -208,8 +325,23 @@ function goalIndexForCol(col: number): number | null {
 export function createFroggerGame(
   canvas: HTMLCanvasElement,
   onGameOver: (finalScore: number) => void,
+  skin: SkinId = DEFAULT_SKIN,
 ): FroggerHandle {
   const ctx = canvas.getContext("2d")!;
+
+  let palette = FROGGER_SKINS[skin] ?? FROGGER_SKINS[DEFAULT_SKIN];
+
+  // Enciende el glow de la skin y lo apaga siempre al salir, para que no se
+  // filtre al resto del frame (HUD incluido).
+  function withGlow(color: string, draw: () => void) {
+    if (palette.glow > 0) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = palette.glow;
+    }
+    draw();
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
+  }
 
   const keysDown: Record<string, boolean> = {};
   let pendingDir: Direction | null = null;
@@ -384,10 +516,11 @@ export function createFroggerGame(
     const w = e.width * CELL;
     const h = CELL;
     if (e.type === "car") {
-      const palette = ["#ff3b3b", "#ffd23b", "#3b8bff"];
-      ctx.fillStyle = palette[Math.abs(Math.round(e.baseCol)) % palette.length];
-      ctx.fillRect(x + 3, y + 8, w - 6, h - 16);
-      ctx.fillStyle = "#111";
+      const bodies = palette.carBodies;
+      const body = bodies[Math.abs(Math.round(e.baseCol)) % bodies.length];
+      ctx.fillStyle = body;
+      withGlow(body, () => ctx.fillRect(x + 3, y + 8, w - 6, h - 16));
+      ctx.fillStyle = palette.carWheel;
       ctx.beginPath();
       ctx.arc(x + 10, y + h - 8, 5, 0, Math.PI * 2);
       ctx.fill();
@@ -395,14 +528,18 @@ export function createFroggerGame(
       ctx.arc(x + w - 10, y + h - 8, 5, 0, Math.PI * 2);
       ctx.fill();
     } else if (e.type === "truck") {
-      ctx.fillStyle = "#999";
-      ctx.fillRect(x + 2, y + 6, w - 4, h - 12);
-      ctx.fillStyle = "#555";
+      ctx.fillStyle = palette.truckBody;
+      withGlow(palette.truckBody, () =>
+        ctx.fillRect(x + 2, y + 6, w - 4, h - 12),
+      );
+      ctx.fillStyle = palette.truckCab;
       ctx.fillRect(x + 2, y + 6, CELL - 6, h - 12);
     } else if (e.type === "log") {
-      ctx.fillStyle = "#7a4a20";
-      ctx.fillRect(x + 2, y + 10, w - 4, h - 20);
-      ctx.strokeStyle = "#5c3714";
+      ctx.fillStyle = palette.logBody;
+      withGlow(palette.logBody, () =>
+        ctx.fillRect(x + 2, y + 10, w - 4, h - 20),
+      );
+      ctx.strokeStyle = palette.logGrain;
       ctx.lineWidth = 1;
       for (let lx = x + 8; lx < x + w - 6; lx += 10) {
         ctx.beginPath();
@@ -415,10 +552,12 @@ export function createFroggerGame(
       for (let i = 0; i < e.width; i++) {
         const cx = x + i * CELL + CELL / 2;
         const cy = y + CELL / 2;
-        ctx.fillStyle = "#2f8f4e";
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, 15, 12, 0, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = palette.turtleShell;
+        withGlow(palette.turtleShell, () => {
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, 15, 12, 0, 0, Math.PI * 2);
+          ctx.fill();
+        });
       }
       ctx.globalAlpha = 1;
     }
@@ -436,18 +575,20 @@ export function createFroggerGame(
     }
     const x = col * CELL + CELL / 2;
     const y = row * CELL + CELL / 2 + lift;
-    ctx.fillStyle = "#39ff6a";
-    ctx.beginPath();
-    ctx.ellipse(x, y, 14, 12, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = palette.frogBody;
+    withGlow(palette.frogBody, () => {
+      ctx.beginPath();
+      ctx.ellipse(x, y, 14, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.fillStyle = palette.frogEye;
     ctx.beginPath();
     ctx.arc(x - 6, y - 6, 3, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
     ctx.arc(x + 6, y - 6, 3, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#111";
+    ctx.fillStyle = palette.frogPupil;
     ctx.beginPath();
     ctx.arc(x - 6, y - 6, 1.4, 0, Math.PI * 2);
     ctx.fill();
@@ -457,56 +598,64 @@ export function createFroggerGame(
   }
 
   function drawHUD() {
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = palette.hud;
     ctx.font = "15px monospace";
     ctx.textAlign = "left";
-    ctx.fillText(`SCORE  ${score}`, 10, 20);
-    ctx.textAlign = "center";
-    ctx.fillText(`NIVEL ${level}`, W / 2, 20);
+    withGlow(palette.hud, () => {
+      ctx.fillText(`SCORE  ${score}`, 10, 20);
+      ctx.textAlign = "center";
+      ctx.fillText(`NIVEL ${level}`, W / 2, 20);
+    });
     ctx.textAlign = "left";
     for (let i = 0; i < lives; i++) {
-      ctx.fillStyle = "#39ff6a";
+      ctx.fillStyle = palette.lifeIcon;
       ctx.beginPath();
       ctx.ellipse(W - 18 - i * 22, 12, 8, 6, 0, 0, Math.PI * 2);
       ctx.fill();
     }
     const ratio = Math.max(0, roundTimeMs / (roundTimeMax * 1000));
     ctx.fillStyle =
-      ratio > 0.5 ? "#39ff6a" : ratio > 0.2 ? "#ffd23b" : "#ff3b3b";
+      ratio > 0.5
+        ? palette.timerHigh
+        : ratio > 0.2
+          ? palette.timerMid
+          : palette.timerLow;
     ctx.fillRect(0, 0, W * ratio, 4);
   }
 
   function draw() {
-    ctx.fillStyle = "#0a3d0a";
+    ctx.fillStyle = palette.goalBandBg;
     ctx.fillRect(0, ROW_GOALS * CELL, W, CELL);
-    ctx.fillStyle = "#00294d";
+    ctx.fillStyle = palette.riverBg;
     ctx.fillRect(
       0,
       ROW_RIVER_TOP * CELL,
       W,
       (ROW_RIVER_BOT - ROW_RIVER_TOP + 1) * CELL,
     );
-    ctx.fillStyle = "#0f5c1f";
+    ctx.fillStyle = palette.safeBg;
     ctx.fillRect(0, ROW_SAFE_MID * CELL, W, CELL);
-    ctx.fillStyle = "#111";
+    ctx.fillStyle = palette.roadBg;
     ctx.fillRect(
       0,
       ROW_ROAD_TOP * CELL,
       W,
       (ROW_ROAD_BOT - ROW_ROAD_TOP + 1) * CELL,
     );
-    ctx.fillStyle = "#0f5c1f";
+    ctx.fillStyle = palette.safeBg;
     ctx.fillRect(0, ROW_START * CELL, W, CELL);
 
     for (let i = 0; i < GOAL_COLS.length; i++) {
       const gx = GOAL_COLS[i] * CELL;
-      ctx.fillStyle = goalsFilled[i] ? "#062b06" : "#134d13";
+      ctx.fillStyle = goalsFilled[i] ? palette.goalFilled : palette.goalEmpty;
       ctx.fillRect(gx, ROW_GOALS * CELL, CELL * 2, CELL);
-      ctx.strokeStyle = "#d4af37";
+      ctx.strokeStyle = palette.goalBorder;
       ctx.lineWidth = 2;
-      ctx.strokeRect(gx + 2, ROW_GOALS * CELL + 2, CELL * 2 - 4, CELL - 4);
+      withGlow(palette.goalBorder, () =>
+        ctx.strokeRect(gx + 2, ROW_GOALS * CELL + 2, CELL * 2 - 4, CELL - 4),
+      );
       if (goalsFilled[i]) {
-        ctx.fillStyle = "#39ff6a";
+        ctx.fillStyle = palette.frogBody;
         ctx.beginPath();
         ctx.ellipse(
           gx + CELL,
@@ -533,12 +682,12 @@ export function createFroggerGame(
     drawHUD();
 
     if (paused) {
-      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillStyle = palette.overlay;
       ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = "#fff";
+      ctx.fillStyle = palette.overlayText;
       ctx.font = "bold 24px monospace";
       ctx.textAlign = "center";
-      ctx.fillText("PAUSA", W / 2, H / 2);
+      withGlow(palette.overlayText, () => ctx.fillText("PAUSA", W / 2, H / 2));
     }
   }
 
@@ -586,6 +735,10 @@ export function createFroggerGame(
       if (rafId !== null) cancelAnimationFrame(rafId);
       initGame();
       start();
+    },
+    // Sólo repinta: el próximo frame usa la paleta nueva sin tocar la partida.
+    setSkin(next: SkinId) {
+      palette = FROGGER_SKINS[next] ?? FROGGER_SKINS[DEFAULT_SKIN];
     },
   };
 }

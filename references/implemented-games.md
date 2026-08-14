@@ -113,15 +113,19 @@ Este spec introdujo `lib/games/registry.ts`, reemplazando el `if (game.id === "a
 
 **Implementación**
 
-|                 |                                                                    |
-| --------------- | ------------------------------------------------------------------ |
-| Motor           | `lib/games/frogger.ts` — `createFroggerGame` / `FroggerHandle`     |
-| Componente      | `components/FroggerGame.tsx`                                       |
-| Canvas          | 1 canvas de 640×560 (grilla 16×14 de 40px)                         |
-| Controles       | ← → ↑ ↓ saltar (celda a celda) · P / Escape pausar                 |
-| Assets externos | Ninguno (todo dibujado con primitivas canvas)                      |
-| HUD             | Dibujado en canvas (score, nivel, vidas, barra de tiempo de ronda) |
-| Pausa           | Sí (P / Escape)                                                    |
+|                 |                                                                                                                               |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Motor           | `lib/games/frogger.ts` — `createFroggerGame(canvas, onGameOver, skin?)` / `FroggerHandle` (`destroy` / `restart` / `setSkin`) |
+| Componente      | `components/FroggerGame.tsx`                                                                                                  |
+| Canvas          | 1 canvas de 640×560 (grilla 16×14 de 40px), `.crt-screen` con `aspect-ratio: 8 / 7` propio (no el 4/3 compartido)             |
+| Controles       | ← → ↑ ↓ saltar (celda a celda) · P / Escape pausar · táctil: `TouchControls` (D-pad + botón PAUSA → `KeyP`)                   |
+| Assets externos | Ninguno (todo dibujado con primitivas canvas)                                                                                 |
+| HUD             | Dibujado en canvas (score, nivel, vidas, barra de tiempo de ronda)                                                            |
+| Pausa           | Sí (P / Escape)                                                                                                               |
+| Skins           | `clasico` (default) · `neon` · `retro` — selector en el componente, preferencia en `localStorage` bajo `av_skin_frogger`      |
+| Mobile          | Verificado 2026-08-14 en 375×667 · 430×932 · 768×1024 (táctil) y 1440×900 (control, sin touch) — ver nota abajo               |
+
+**Estado mobile (2026-08-14).** `/juego/frogger` y `/juego/frogger/jugar` verificados con Playwright en los cuatro perfiles, portrait. Se corrigieron dos cosas en `components/FroggerGame.tsx`: el `.crt-screen` no declaraba relación de aspecto propia y estiraba el tablero un 17% a lo ancho (4/3 heredado vs 8/7 real del canvas) — ahora usa `aspectRatio: "8 / 7"` inline, mismo patrón que Tetris con su `1 / 2`, con un tope de `maxWidth: 900` en el `.crt` para que al desestirarse no crezca de alto en desktop; y no montaba `TouchControls`, así que en táctil el juego era injugable — ahora monta `<TouchControls accent="green" actions={[{ id: "pause", label: "PAUSA", code: "KeyP" }]} />` según spec 11 (D-pad = flechas, `KeyP` es la tecla real del motor). El `accent` es `green` y no `lime` (el `color` del juego) porque la union de `TouchControls` no contempla `lime`; queda como pendiente de alcance compartido. El teclado físico sigue funcionando en paralelo en los perfiles táctiles, y `destroy()` no cambió (no se tocó `lib/games/frogger.ts`).
 
 `color: 'lime'` requirió ampliar el `CHECK` de `games.color` (antes sólo cyan/magenta/yellow/green) vía `apply_migration`, y agregar el token `--lime` en `app/globals.css` junto a los demás colores del tema. El spec original (`specs/game-jam/frogger/01-frogger-core.md`, movido a `specs/12-frogger-core.md`) describía props `paused/onScoreChange/onLivesChange/onLevelChange/onGameOver` y una play-page dedicada (`app/games/frogger/play/page.tsx`); se implementó en cambio siguiendo el patrón real de los otros cuatro juegos — `{ game }` + `create<Nombre>Game(canvas, onGameOver) → {destroy, restart}` + HUD sólo en canvas + ruta genérica `/juego/frogger/jugar` vía registry — por ser el patrón efectivamente vigente en el repo.
 
