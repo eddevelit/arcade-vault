@@ -11,12 +11,27 @@ const DPAD_CODE: Record<DPadDirection, string> = {
   right: "ArrowRight",
 };
 
-const DPAD_GLYPH: Record<DPadDirection, string> = {
-  up: "▲",
-  down: "▼",
-  left: "◀",
-  right: "▶",
+// Un solo triángulo (viewBox 24x24) rotado por dirección vía CSS,
+// en vez de 4 glifos unicode que renderizan distinto por fuente/SO.
+const DPAD_ROTATION: Record<DPadDirection, number> = {
+  up: 0,
+  right: 90,
+  down: 180,
+  left: 270,
 };
+
+function DPadArrow({ dir }: { dir: DPadDirection }) {
+  return (
+    <svg
+      className="touch-dpad-arrow"
+      viewBox="0 0 24 24"
+      style={{ transform: `rotate(${DPAD_ROTATION[dir]}deg)` }}
+      aria-hidden="true"
+    >
+      <path d="M12 4 L20 16 L4 16 Z" fill="currentColor" />
+    </svg>
+  );
+}
 
 export interface TouchActionButton {
   id: string;
@@ -60,9 +75,12 @@ export default function TouchControls({
               code={DPAD_CODE[dir]}
               className={`touch-dpad-btn touch-dpad-${dir}`}
             >
-              {DPAD_GLYPH[dir]}
+              <DPadArrow dir={dir} />
             </TouchButton>
           ))}
+          <div className="touch-dpad-hub" aria-hidden="true">
+            <span className="touch-dpad-gem" />
+          </div>
         </div>
       )}
       {actions.length > 0 && (

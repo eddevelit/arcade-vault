@@ -2930,14 +2930,23 @@ a {
 }
 
 /* ===== touch controls (mobile, pointer: coarse) ===== */
+/* Carcasa tipo gamepad: mismo lenguaje visual que .crt (bisel oscuro,
+   anillos de sombra), con el acento de color parametrizado por juego. */
 .touch-controls {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 28px;
   flex-wrap: wrap;
   margin-top: 18px;
-  padding: 16px 12px;
+  padding: 18px 22px;
+  background: linear-gradient(180deg, #15151d 0%, #0a0a10 100%);
+  border-radius: 20px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.6);
 }
 .touch-controls-cyan {
   --touch-accent: var(--cyan);
@@ -2960,13 +2969,16 @@ a {
   --touch-accent-glow-inset: rgba(0, 255, 136, 0.35);
 }
 
+/* D-pad en diamante con hub central: la gema del hub late siempre,
+   como el LED de estado del .crt, y toma el acento del juego. */
 .touch-dpad {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(3, 56px);
   grid-template-rows: repeat(3, 56px);
   grid-template-areas:
     ".    up    ."
-    "left .     right"
+    "left hub   right"
     ".    down  .";
   gap: 4px;
 }
@@ -2982,57 +2994,108 @@ a {
 .touch-dpad-right {
   grid-area: right;
 }
+.touch-dpad-hub {
+  grid-area: hub;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 50%, #181822 0%, #08080d 80%);
+  border: 1px solid var(--touch-accent-glow-inset);
+  border-radius: 8px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.85);
+}
+.touch-dpad-gem {
+  width: 11px;
+  height: 11px;
+  background: var(--touch-accent);
+  box-shadow: 0 0 8px var(--touch-accent);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  animation: pulse-led 2s ease-in-out infinite;
+}
 
 .touch-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .touch-dpad-btn,
 .touch-action-btn {
+  position: relative;
   touch-action: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   font-family: var(--pixel);
   color: var(--ink-dim);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--ink-faint);
+  background: linear-gradient(180deg, #1a1a25 0%, #0a0a12 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   cursor: pointer;
+  box-shadow:
+    0 4px 0 #050507,
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6);
   transition:
-    color 100ms,
-    border-color 100ms,
-    box-shadow 100ms;
+    transform 80ms ease,
+    color 140ms,
+    border-color 140ms,
+    box-shadow 140ms;
 }
 .touch-dpad-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  border-radius: 8px;
+  border-radius: 10px;
+}
+.touch-dpad-arrow {
+  width: 20px;
+  height: 20px;
+  transition: filter 140ms;
 }
 .touch-action-btn {
-  padding: 14px 20px;
+  padding: 14px 22px;
   font-size: 10px;
   letter-spacing: 0.14em;
-  border-radius: 6px;
+  border-radius: 999px;
   white-space: nowrap;
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      rgba(255, 255, 255, 0.07),
+      transparent 55%
+    ),
+    linear-gradient(180deg, #1c1c28 0%, #0c0c14 100%);
 }
 .touch-dpad-btn.pressed,
 .touch-action-btn.pressed {
+  transform: translateY(3px);
   color: var(--touch-accent);
   border-color: var(--touch-accent);
   box-shadow:
-    0 0 14px var(--touch-accent-glow),
-    inset 0 0 8px var(--touch-accent-glow-inset);
+    0 1px 0 #050507,
+    inset 0 0 16px var(--touch-accent-glow-inset),
+    0 0 18px var(--touch-accent-glow);
+}
+.touch-dpad-btn.pressed .touch-dpad-arrow {
+  filter: drop-shadow(0 0 5px var(--touch-accent))
+    drop-shadow(0 0 10px var(--touch-accent));
+}
+.touch-dpad-btn:focus-visible,
+.touch-action-btn:focus-visible {
+  outline: 2px solid var(--touch-accent);
+  outline-offset: 2px;
 }
 
 @media (max-width: 520px) {
   .touch-controls {
-    gap: 16px;
+    gap: 18px;
+    padding: 14px 16px;
   }
   .touch-dpad {
     grid-template-columns: repeat(3, 48px);
     grid-template-rows: repeat(3, 48px);
+  }
+  .touch-dpad-arrow {
+    width: 17px;
+    height: 17px;
   }
 }
