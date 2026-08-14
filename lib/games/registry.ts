@@ -15,4 +15,7 @@ export const GAME_COMPONENTS: Record<string, ComponentType<{ game: Game }>> = {
   serpiente: dynamic(() => import("@/components/SerpienteGame"), {
     ssr: false,
   }),
+  frogger: dynamic(() => import("@/components/FroggerGame"), {
+    ssr: false,
+  }),
 };

@@ -7,7 +7,7 @@ export interface Game {
   long: string;
   cat: GameCategory;
   cover: string;
-  color: "cyan" | "magenta" | "yellow" | "green";
+  color: "cyan" | "magenta" | "yellow" | "green" | "lime";
   best: number;
   plays: string;
 }
